@@ -1,0 +1,91 @@
+<!doctype html>
+<!-- Network Atlas. Copyright 2026 Mary-Lynn Bragg (https://www.linkedin.com/in/marylynn). Licensed under the PolyForm Noncommercial License 1.0.0: https://polyformproject.org/licenses/noncommercial/1.0.0 . Free for noncommercial use with this notice kept. SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Network Atlas: visualize your LinkedIn export</title>
+<meta name="description" content="Drop in your LinkedIn data export and see your network, relationships and growth. Everything runs in your browser; your data never leaves your computer.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style id="appcss">/*@CSS*/</style>
+</head><body>
+<div class="top"><div class="in">
+ <div class="brandbox"><b class="brand">Network Atlas</b><small>for your LinkedIn export</small></div>
+ <div class="navbox" id="navbox"><div class="navrow" id="nav-an"></div><div class="navrow" id="nav-rec"></div></div>
+ <span class="sp"></span>
+ <div class="actions"><div class="arow"><button class="btn pri" id="btn-save" style="display:none">Save report</button><button class="btn" id="btn-print" style="display:none">Print</button></div><div class="arow"><button class="btn" id="btn-style">Colors &amp; fonts</button></div></div>
+</div></div>
+
+<div class="hero" id="hero">
+ <span class="kick">Free &middot; private &middot; runs in your browser</span>
+ <h1>Visualize your LinkedIn data</h1>
+ <p class="intro">You've spent years building a LinkedIn network, but the site only shows you a list of names. Your data export holds the real story: who found you, who you actually talk to, and how your network grew with each job. Drop it here to see it.</p>
+ <p class="priv"><b>Your data never leaves this page.</b> Everything is read and analyzed on your own computer. Nothing is uploaded, stored or sent anywhere. Your private messages are never read, only dates and senders. Your own posts and comments are scanned on your computer to count topic words. Results show counts and categories, never other people's names.</p>
+ <div class="drop" id="drop">
+  <h3>Drop your LinkedIn export here</h3>
+  <p>The .zip file, the unzipped folder, or the CSV files themselves.</p>
+  <div class="row2"><button class="btn pri" id="btn-zip">Choose .zip or CSV files</button><button class="btn" id="btn-folder">Choose a folder</button><button class="btn" id="btn-sample">Try sample data</button></div>
+  <input type="file" id="in-files" accept=".zip,.csv" multiple hidden><input type="file" id="in-folder" webkitdirectory hidden>
+ </div>
+ <div id="status"></div>
+ <details class="steps"><summary>How do I get my LinkedIn export?</summary><ol>
+  <li>On LinkedIn, open <b>Settings &amp; Privacy &rarr; Data privacy &rarr; Get a copy of your data</b>. Menu names change from time to time.</li>
+  <li>Choose <b>Want something in particular?</b> and tick Connections, Messages, Invitations, Posts (Shares), Positions and Company Follows, or choose the full archive.</li>
+  <li>Click <b>Request archive</b>. LinkedIn emails you a link, usually within minutes for a small export and up to 24 hours for the full one.</li>
+  <li>Download the .zip and drop it above. No need to unzip it.</li></ol></details>
+</div>
+
+<div class="loaded" id="loaded" style="display:none"></div>
+<section class="sec" id="s-card" style="display:none">
+ <div class="sh"><span class="num compass" aria-hidden="true"><svg viewBox="0 0 48 48" width="58" height="58"><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4"/><path d="M33 15 L27.5 27.5 L15 33 L20.5 20.5 Z" fill="currentColor"/><circle cx="24" cy="24" r="2.6" fill="#fff"/></svg></span><div><h2>Your summary card</h2><p class="sub">A shareable image of your best numbers, ready to post. It uses your colors and fonts and never names other people.</p></div></div>
+ <div class="cardbox">
+  <div class="cardctl"><div class="seg" id="card-layouts"></div><label id="card-hl-wrap">Headline <select id="card-hl"></select></label><button class="imgbtn" id="card-dl" title="Save this card as a PNG image">Save image</button></div>
+  <div class="cardprev"><canvas id="card-cv"></canvas></div>
+  <p class="note" id="card-note"></p>
+ </div>
+</section>
+<main id="results"></main>
+
+<section class="sec" id="s-ai" style="display:none">
+ <div class="sh"><span class="num" id="ai-num">2.02</span><div><h2>Go deeper with your own AI</h2><p class="sub">Six more analyses need judgment: reading messages, grouping companies, interpreting what LinkedIn inferred. Four more turn your results into a plan, with names, for your eyes only. Hand them to an AI assistant, with this kit.</p></div></div>
+ <div class="kit">
+  <div class="kit-main"><h3>The starter kit</h3>
+   <p>One download with everything an AI assistant needs: standing instructions that keep other people's names out of the results and match your chosen colors and fonts, plus ten ready-made prompts, including a reconnection list and hello drafts.</p>
+   <button class="btn pri" id="btn-kit">Download starter kit (.zip)</button></div>
+  <ol class="kit-steps"><li><b>Unzip</b> the kit into the folder that holds your unzipped LinkedIn export, so the prompts sit next to files like Connections.csv.</li><li><b>Point your AI at that folder.</b> Use an AI assistant that can read files on your computer, such as Claude Code, and start it from inside that folder (or choose that folder when it asks where to work). That is how it reads your CSV files without you uploading them by hand.</li><li><b>Say</b> &ldquo;Read START-HERE.md and run analysis 1.&rdquo;</li></ol>
+ </div>
+ <div class="rec-ai privnote"><b>A word on privacy.</b> This page never sends your data anywhere, but an AI assistant is different. Once you point it at your export, it reads those files and sends what it reads to the company that runs the AI, under that company&rsquo;s data policy. That is true of every prompt below, so check your assistant&rsquo;s privacy settings first (for example, turn off training on your data and use a private or temporary session). <span class="tag">private</span> marks the prompts that also put <i>real names of people in your network</i> into the results, which is what makes them useful for reaching out. Treat those most carefully: don&rsquo;t post, email or share the files, and skip them if you aren&rsquo;t comfortable. The unmarked prompts tell the AI to keep names out of its results, but it still sees the raw files.</div>
+ <h3 class="mini">Or copy a single prompt</h3>
+ <div class="plist" id="ai-grid"></div>
+ <p class="src" style="margin-top:14px">Chat-only assistants cannot read large CSV files. If you use one, paste only small anonymized samples, never other people's messages. Check any AI tool's data policy first: unlike this page, an AI service processes whatever you give it.</p>
+</section>
+
+<footer>
+ <h3>How this works</h3>
+ <p>This page is a single static web page that you open in your browser, and it runs only on your computer. It isn&rsquo;t hosted anywhere and has no server: the file you opened is the whole app.</p>
+ <div class="how2">
+  <div><h4>How to use it</h4><ul>
+   <li>Drop in your LinkedIn export (the .zip, the unzipped folder, or the CSV files).</li>
+   <li>Your browser&rsquo;s own file reader opens the files and everything is analyzed in memory on your device. Nothing is uploaded or stored.</li>
+   <li>Restyle it with Colors &amp; fonts, save your summary card as an image, or save the whole report as a file you can keep or share.</li>
+   <li>The sample data is made up, so you can look around first.</li></ul></div>
+  <div><h4>How it is built</h4><ul>
+   <li>Charts use Chart.js and network graphs use D3.js. The zip is opened with JSZip.</li>
+   <li>The analysis is plain JavaScript. Industries are assigned by simple keyword rules, so treat them as approximate.</li>
+   <li>Relationship tiers come from message dates and senders only. Message text is never read.</li>
+   <li>The only things loaded from the internet are the chart libraries and fonts, never your data.</li></ul></div>
+ </div>
+ <h3>License</h3>
+ <p>Free for noncommercial use. You may use, change and share Network Atlas, keeping the credit below, but not sell it or charge for it. Licensed under the <a href="https://polyformproject.org/licenses/noncommercial/1.0.0" target="_blank" rel="noopener">PolyForm Noncommercial License 1.0.0</a>. The reports you make with it are yours.</p>
+ <h3>Credit</h3>
+ <p>Network Atlas was built by <a href="https://www.linkedin.com/in/marylynn" target="_blank" rel="noopener">Mary-Lynn Bragg</a> with Claude Code. The idea and format are adapted from <a href="https://loganhc-09.github.io/LinkedIn-Data-Export-Visualization/" target="_blank" rel="noopener"><i>Visualize Your LinkedIn Data Export</i></a> by Logan Currie, also built with Claude Code.</p>
+</footer>
+
+<aside id="drawer" aria-label="Colors and fonts"><button class="btn" id="d-close" style="float:right">Close</button>
+ <h3>Palettes</h3><div class="pre" id="d-pre"></div>
+ <h3>Your colors</h3><div class="cols" id="d-cols"></div>
+ <h3>Heading font</h3><select id="d-head"></select><p class="fprev" id="d-hp">Network, in headline</p>
+ <h3>Body font</h3><select id="d-body"></select>
+ <p style="margin-top:18px"><button class="btn" id="d-reset">Reset to default</button></p></aside>
+/*@SCRIPTS*/
+</body></html>

@@ -1,0 +1,1652 @@
+<!doctype html>
+<!-- Network Atlas. Copyright 2026 Mary-Lynn Bragg (https://www.linkedin.com/in/marylynn). Licensed under the PolyForm Noncommercial License 1.0.0: https://polyformproject.org/licenses/noncommercial/1.0.0 . Free for noncommercial use with this notice kept. SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Network Atlas: visualize your LinkedIn export</title>
+<meta name="description" content="Drop in your LinkedIn data export and see your network, relationships and growth. Everything runs in your browser; your data never leaves your computer.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style id="appcss">
+:root{--gold:#cca300;--green:#062a30;--grey:#8b8d92;--beige:#e1d9c1;--red:#ed4319;--blue:#275273;--purple:#46004E;--ink:#2b4a50;--on-ink:#fff;--on-gold:#062a30;--on-red:#fff;--on-blue:#fff;--on-purple:#fff;--on-grey:#fff;--on-soft:#062a30;--num:#cca300;--tint:#faf8f1;--font-head:'Inter',sans-serif;--font-body:'Inter',sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:#fff;color:var(--green);font-family:var(--font-body);font-size:15px;line-height:1.7}
+a{color:var(--blue)}
+nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--green)}
+nav .in{max-width:1080px;margin:0 auto;padding:10px 24px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+nav b{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;margin-right:8px}
+nav a{font-size:12px;font-weight:800;color:var(--green);text-decoration:none;padding:2px 8px;border:2px solid var(--green)}
+nav a:hover{background:var(--gold);border-color:var(--gold)}
+header{max-width:1080px;margin:0 auto;padding:64px 24px 24px}
+.kick{display:inline-block;background:var(--gold);font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;line-height:1.7}
+h1{font-size:clamp(38px,7.5vw,78px);font-weight:900;line-height:.98;letter-spacing:-.035em;margin:14px 0 14px}
+.by{font-size:13px;color:var(--grey);font-weight:600;margin:0 0 18px}
+header p.intro{max-width:700px;font-size:16px;color:var(--ink);margin:0 0 14px}
+.priv{max-width:700px;border-left:8px solid var(--gold);background:var(--tint);padding:10px 14px;font-size:13.5px;color:var(--ink)}
+.sec{max-width:1080px;margin:0 auto;padding:56px 24px;border-top:4px solid var(--green)}
+.sh{display:flex;gap:18px;align-items:flex-start;margin-bottom:22px}
+.num{font-size:60px;font-weight:900;line-height:.9;color:var(--gold);letter-spacing:-.04em}
+.sh h2{font-size:clamp(26px,4.4vw,38px);font-weight:900;line-height:1.05;letter-spacing:-.03em;margin:0 0 6px}
+.sub{margin:0;color:var(--ink);font-size:15px;max-width:680px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:760px){.cards3{grid-template-columns:1fr}}
+.hc{padding:16px 18px;border-bottom:8px solid rgba(0,0,0,.22)}
+.hc b{display:block;font-size:44px;font-weight:900;line-height:1;letter-spacing:-.03em}
+.hc span{display:block;margin-top:8px;font-size:13px;line-height:1.45;font-weight:600}
+.hc.a{background:var(--green);color:var(--on-ink)}.hc.a b{color:var(--num)}.hc.b{background:var(--blue);color:var(--on-blue)}.hc.c{background:var(--red);color:var(--on-red)}
+.hc.d{background:var(--gold);color:var(--on-gold)}
+.card{border:3px solid var(--green);padding:18px;margin-bottom:18px;position:relative}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin:0 0 12px}
+details.more{border:3px solid var(--green);margin-bottom:18px}
+details.more summary{cursor:pointer;list-style:none;padding:10px 18px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;background:var(--tint)}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"+";float:right;font-size:18px;line-height:1}
+details.more[open] summary::after{content:"\2212"}
+details.more .mb{padding:18px;border-top:3px solid var(--green)}
+.take{background:var(--beige);padding:14px 18px;font-size:14.5px;margin-bottom:12px}.take b{font-weight:900}
+.src{font-size:12px;color:var(--grey);line-height:1.6;margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:860px){.two{grid-template-columns:1fr}}
+.two>.card{margin-bottom:0}
+.tip{position:absolute;pointer-events:none;background:var(--green);color:var(--on-ink);font-size:12px;padding:6px 9px;opacity:0;max-width:240px;z-index:5;line-height:1.4}
+svg.net{width:100%;height:auto;display:block;background:var(--tint)}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 0;font-size:12px;font-weight:600}.lg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-2px;border:2px solid var(--green)}.lg i.sq{border-radius:0;border:0;width:12px;height:12px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}.chip{font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--green);background:#fff;line-height:1.5}.chip.g{background:var(--green);color:#fff}.chip.s{border-style:dashed}
+.note{font-size:12px;color:var(--grey);margin:12px 0 0;line-height:1.6}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;text-align:left;padding:8px 6px;border-bottom:3px solid var(--green)}table.t td{padding:9px 6px;border-bottom:2px solid var(--beige);vertical-align:top;line-height:1.5}table.t td.n,table.t th.n{text-align:right;font-weight:800}
+.inf{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px}.inf div{background:var(--beige);padding:12px;font-size:13px;line-height:1.5}.inf b{display:block;font-size:14px;margin-bottom:3px}
+.bd{display:inline-block;color:#fff;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;margin-bottom:6px}.bd.right{background:var(--blue)}.bd.meh{background:var(--gold);color:var(--green)}.bd.na{background:var(--grey)}
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:16px}.col{padding:14px 16px;color:#fff}.col h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em}.col ul{margin:0;padding-left:16px;font-size:13px;line-height:1.55}.col li{margin-bottom:6px}.c1{background:var(--blue)}.c2{background:var(--red)}.c3{background:var(--purple)}
+.tbl{border:3px solid var(--green)}
+.hd{background:var(--green);color:#fff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.row{border-top:2px solid var(--beige)}.row:nth-child(even){background:var(--tint)}
+.ic{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff}
+.ic.hi{background:var(--red)}.ic.md{background:var(--gold);color:var(--green)}.ic.lo{background:#fff;border:2px solid var(--grey);color:var(--grey)}
+.row h5{margin:0 0 1px;font-size:14px;font-weight:800;letter-spacing:-.01em;line-height:1.4}.row p{margin:0;font-size:12.5px;color:#4c6165;line-height:1.4}
+.pill{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.p-follow{background:#f7d9d0;color:#a52d0f}.p-intro{background:#cfe0ea;color:var(--blue)}.p-meet{background:#e6ecd0;color:#4d5a14}.p-lead{background:#e8d4ec;color:var(--purple)}.p-re{background:var(--beige);color:#5e5535}
+.wt{text-align:right;font-weight:900;font-size:15px}
+details.rest summary{cursor:pointer;list-style:none;padding:9px 14px;border-top:2px solid var(--beige);background:var(--tint);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--blue)}
+details.rest summary::-webkit-details-marker{display:none}
+details.rest summary::after{content:"+";float:right;font-size:16px;line-height:1}
+details.rest[open] summary::after{content:"\2212"}.wt.hi{color:var(--red)}.wt.md{color:#9a7c00}.wt.lo{color:var(--grey)}
+@media(max-width:760px){.hd{display:none}.row{grid-template-columns:44px 1fr;grid-template-areas:"i m" "i t" "i w"}.row .ic{grid-area:i}.row .m{grid-area:m}.row .tt{grid-area:t}.row .wt{grid-area:w;text-align:left}}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tr{padding:14px 16px;color:#fff;border-bottom:8px solid rgba(0,0,0,.22)}.tr b{display:block;font-size:40px;font-weight:900;line-height:1;letter-spacing:-.02em}.tr span{display:block;margin-top:6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.tr small{display:block;margin-top:3px;font-size:12px;opacity:.9}
+.ph{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:16px}.p{padding:12px 14px;color:#fff}.p b{display:block;font-size:28px;font-weight:900;line-height:1}.p h4{margin:6px 0 3px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.p p{margin:0;font-size:12.5px;line-height:1.5}
+.eras{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:16px}.e{border-top:10px solid var(--c);background:var(--tint);padding:10px 12px}.e h4{margin:0 0 2px;font-size:13px;font-weight:900;line-height:1.3}.e .d{font-size:11.5px;color:#5a6a7d;margin-bottom:6px;line-height:1.4}.e b{font-size:26px;font-weight:900;color:var(--c)}.e small{font-size:12px;font-weight:600;color:#5a6a6d;margin-left:4px}.e p{margin:6px 0 0;font-size:12px;line-height:1.45}
+.cl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:16px}.cc{border-left:10px solid var(--c);background:var(--tint);padding:10px 14px}.cc h4{margin:0 0 6px;font-size:13px;font-weight:900;display:flex;justify-content:space-between;gap:10px}.cc h4 span{color:var(--c);font-size:18px}
+.cg{margin-bottom:12px}.cg h4{margin:0 0 5px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--c)}
+.mo{margin:20px 0 6px;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;background:var(--green);color:#fff;padding:5px 12px;display:flex;justify-content:space-between}
+.lr{display:grid;grid-template-columns:70px 1.2fr 80px 140px 80px;gap:10px;align-items:center;padding:8px 12px;border-bottom:2px solid var(--beige);font-size:13.5px}.lr:nth-child(even){background:var(--tint)}.lr small{display:block;color:#5a6a6d;font-size:12px}.lr.h{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);border-bottom:3px solid var(--green)}
+@media(max-width:700px){.lr{grid-template-columns:60px 1fr 60px}.lr>:nth-child(4),.lr>:nth-child(5){display:none}}
+.defs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;font-size:12.5px;line-height:1.45}.defs div{border-left:8px solid var(--c);padding:5px 10px;background:var(--tint)}.defs b{display:block}
+.tag{display:inline-block;font-size:10px;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;color:#fff;background:var(--red)}
+ol.o{margin:0;padding-left:20px;font-size:14px;line-height:1.7}
+footer{max-width:1080px;margin:0 auto;padding:40px 24px 64px;border-top:4px solid var(--green)}
+footer h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin:0 0 8px}
+footer p{font-size:13px;color:var(--ink);max-width:760px;margin:0 0 14px}
+footer .credit{border-left:8px solid var(--gold);background:var(--tint);padding:10px 14px;font-size:13px}
+
+h1,.sh h2,.num,.hc b,.tr b,.p b,.e b,.mo,.hero h2{font-family:var(--font-head)}
+.ax{font-family:var(--font-body);font-size:12px;font-weight:600;fill:var(--green)}
+.muted{color:var(--grey)}
+.p-intro{background:color-mix(in srgb,var(--blue) 16%,#fff);color:var(--blue)}.p-lead{background:color-mix(in srgb,var(--gold) 28%,#fff);color:var(--green)}
+.tr{color:#fff}
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:3px solid var(--green)}
+.top .in{max-width:1080px;margin:0 auto;padding:8px 24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.top b.brand{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;margin-right:6px}
+.top a.nl{font-size:12px;font-weight:800;color:var(--green);text-decoration:none;padding:2px 8px;border:2px solid var(--green)}.top a.nl:hover{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+.btn{font:inherit;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;border:2px solid var(--green);background:#fff;color:var(--green);cursor:pointer}
+.btn:hover{background:var(--green);color:var(--on-ink)}.btn.pri{background:var(--green);color:var(--on-ink)}.btn.pri:hover{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.sp{flex:1}
+/* hero */
+.hero{max-width:1080px;margin:0 auto;padding:56px 24px 28px}
+.hero h1{font-size:clamp(38px,7.5vw,76px);font-weight:900;line-height:.98;letter-spacing:-.035em;margin:14px 0}
+.hero p.intro{max-width:700px;font-size:16px;color:var(--ink);margin:0 0 14px}
+.priv{max-width:700px;border-left:8px solid var(--gold);background:var(--tint);padding:10px 14px;font-size:13.5px;color:var(--ink);margin:0 0 22px}
+.drop{border:3px dashed var(--green);background:var(--tint);padding:28px 22px;text-align:center;transition:.15s;max-width:760px}
+.drop.over{background:color-mix(in srgb,var(--gold) 25%,#fff);border-style:solid}
+.drop h3{margin:0 0 6px;font-size:16px;font-weight:900;text-transform:none;letter-spacing:0}
+.drop p{margin:0 0 14px;font-size:14px;color:var(--ink)}
+.drop .row2{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.steps{max-width:760px;margin:22px 0 0;font-size:14px;color:var(--ink)}.steps summary{cursor:pointer;font-weight:800}.steps ol{margin:8px 0 0;padding-left:20px;line-height:1.7}
+#status{max-width:760px;margin:14px 0 0;font-size:13.5px}
+.err{color:var(--red);font-weight:700}
+.loaded{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+.loaded .box{border:3px solid var(--green);padding:12px 16px;font-size:13.5px;display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center}
+.loaded .box b{font-weight:900}.loaded .miss{color:var(--ink);font-size:12.5px;flex-basis:100%}
+/* style drawer */
+#drawer{position:fixed;right:0;top:0;bottom:0;width:340px;max-width:92vw;background:#fff;border-left:3px solid var(--green);z-index:60;padding:18px;overflow:auto;transform:translateX(105%);transition:transform .2s}
+#drawer.open{transform:none;box-shadow:-10px 0 30px rgba(0,0,0,.15)}
+#drawer h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin:18px 0 8px}
+#drawer h3:first-of-type{margin-top:0}
+.pre{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pre button{border:2px solid var(--green);background:#fff;padding:6px;cursor:pointer;font:inherit;font-size:12px;font-weight:800;text-align:left}
+.pre button.on{background:var(--tint);box-shadow:inset 0 0 0 2px var(--gold)}
+.sw{display:flex;height:14px;margin-top:5px}.sw i{flex:1}
+.cols{display:grid;gap:8px}.cols label{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600}.cols input{width:40px;height:30px;border:2px solid var(--green);padding:0;background:#fff;cursor:pointer}.cols small{display:block;font-weight:400;color:var(--grey);font-size:11.5px}
+#drawer select{width:100%;padding:7px;border:2px solid var(--green);font:inherit;font-size:14px;background:#fff}
+.fprev{margin:6px 0 0;font-size:20px;font-weight:900;line-height:1.2}
+/* AI section */
+.ai-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.pcard{border:3px solid var(--green);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.pcard h4{margin:0;font-size:15px;font-weight:900}.pcard p{margin:0;font-size:13px;color:var(--ink);line-height:1.55}
+.pcard pre{margin:4px 0;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.55;background:var(--tint);border-left:6px solid var(--gold);padding:8px 10px;max-height:150px;overflow:auto}
+.pcard .btn{align-self:flex-start}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:0 0 18px}.how div{background:var(--tint);padding:12px 14px;border-left:8px solid var(--blue);font-size:13.5px;line-height:1.55}.how b{display:block;margin-bottom:3px}
+footer{max-width:1080px;margin:0 auto;padding:36px 24px 64px;border-top:4px solid var(--green)}
+footer h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin:0 0 8px}footer p{font-size:13px;color:var(--ink);max-width:760px;margin:0 0 14px}
+@media print{.top,#drawer,.drop,.steps,.hero .btn,.pcard .btn{display:none!important}details.more>*{display:block!important}.sec{break-inside:avoid-page}}
+@media(max-width:700px){.top .in{flex-wrap:nowrap;overflow-x:auto}.top .in>*{flex:none}.top .sp{display:none}.hero{padding-top:36px}}
+
+.kit{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:800px){.kit{grid-template-columns:1fr}}
+.kit-main{border:3px solid var(--green);background:var(--tint);padding:16px 18px}.kit-main h3{margin:0 0 6px}.kit-main p{margin:0 0 12px;font-size:14px;color:var(--ink)}
+.kit-steps{margin:0;padding:14px 18px 14px 36px;border-left:8px solid var(--gold);background:var(--tint);font-size:14px;line-height:1.7;color:var(--ink)}
+h3.mini{font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin:6px 0 8px}
+.plist{border:3px solid var(--green)}
+.pl{padding:10px 14px;border-top:2px solid var(--beige)}.pl:first-child{border-top:0}
+.pl-h{display:flex;gap:12px;align-items:center;justify-content:space-between}.pl-h b{display:block;font-size:14.5px}.pl-h span{font-size:13px;color:var(--ink)}
+.pl details summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--blue);margin-top:4px}
+.pl pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.55;background:var(--tint);border-left:6px solid var(--gold);padding:8px 10px}
+.btn.mini{padding:4px 10px;font-size:11px;white-space:nowrap}
+.png{position:absolute;top:10px;right:10px;font:inherit;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border:2px solid var(--green);background:#fff;color:var(--green);cursor:pointer;opacity:.75}
+.png:hover{opacity:1;background:var(--green);color:var(--on-ink)}
+body.report .drop,body.report .steps{display:none}
+@media print{.png{display:none!important}}
+
+.cardbox{border:3px solid var(--green);padding:16px;background:var(--tint)}
+.cardctl{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{font:inherit;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:6px 12px;border:2px solid var(--green);background:#fff;color:var(--green);cursor:pointer}
+.seg button.on{background:var(--green);color:var(--on-ink)}
+.cardctl label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;display:flex;gap:8px;align-items:center}
+.cardctl select{font:inherit;font-size:13px;padding:6px;border:2px solid var(--green);background:#fff;max-width:300px}
+.cardprev{text-align:center}.cardprev canvas{max-width:100%;max-height:560px;width:auto;height:auto;border:1px solid rgba(0,0,0,.15);background:#fff}
+@media print{#s-card{display:none!important}}
+
+.top b.brand small{font-weight:600;text-transform:none;letter-spacing:0;color:var(--grey);margin-left:8px;font-size:12px}
+@media(max-width:760px){.top b.brand small{display:none}}
+
+.wk-box{border:3px solid var(--green);padding:16px 18px;background:var(--tint);margin-bottom:16px}.wk-box h3{margin:0 0 6px}.wk-box p{margin:0 0 12px;font-size:14px;color:var(--ink)}
+.wk-bar{display:flex;height:22px;border:2px solid var(--green)}.wk-bar i{display:block}
+.wk-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:10px}.wk-legend b{font-size:26px;font-weight:900;font-family:var(--font-head);display:block;line-height:1}.wk-legend span{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.wk-legend small{display:block;font-size:12px;color:var(--grey)}
+.recs{display:grid;gap:12px;margin-bottom:14px}
+.rec{display:flex;gap:16px;border:3px solid var(--green);padding:16px 18px}
+.rec-n{font-size:46px;font-weight:900;line-height:.9;color:var(--gold);font-family:var(--font-head);min-width:34px}
+.rec-b h3{margin:0 0 6px;font-size:18px;text-transform:none;letter-spacing:-.01em;font-weight:900;font-family:var(--font-head)}
+.rec-why{margin:0 0 8px;font-size:14px;color:var(--ink)}.rec ol{margin:0 0 8px;padding-left:20px;font-size:14px;line-height:1.65}
+.rec-weak{margin:10px 0 0;font-size:13.5px;color:var(--ink)}.wkb{display:inline-block;background:var(--gold);color:var(--on-gold);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:1px 7px;margin-right:6px}
+.rec-ai{border-left:8px solid var(--blue);background:var(--tint);padding:10px 14px;font-size:14px;margin:0 0 12px}
+.tag{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;background:var(--red);color:var(--on-red);padding:1px 7px;margin-left:6px;vertical-align:1px}
+@media(max-width:600px){.rec{flex-direction:column;gap:6px}}
+@media print{.rec-ai{display:none}}
+
+
+.fit{display:grid;grid-template-columns:200px 1fr;gap:22px;align-items:center;margin-bottom:16px}
+@media(max-width:700px){.fit{grid-template-columns:1fr}}
+.fit-score{text-align:center}
+.ring{--p:50;width:150px;height:150px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--blue) calc(var(--p)*1%),var(--beige) 0)}
+.ring b{width:108px;height:108px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:900;font-family:var(--font-head);letter-spacing:-.03em}
+.fit-band{font-size:14px;font-weight:900;margin-bottom:2px}.fit-score small{font-size:12px;color:var(--grey)}
+.meter-row{margin-bottom:12px}.meter-h{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}.meter-h span{font-weight:900}
+.meter{height:16px;border:2px solid var(--green);background:var(--beige)}.meter i{display:block;height:100%;background:var(--blue)}
+.meter-row small{display:block;font-size:12.5px;color:var(--ink);margin-top:3px}
+.fit-note{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+.mirror{display:grid;grid-template-columns:1fr 1fr;gap:16px;border-top:3px solid var(--green);padding-top:14px}
+@media(max-width:700px){.mirror{grid-template-columns:1fr}}
+.mcol h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.ml{font-size:12px;color:var(--grey);margin:8px 0 4px;font-weight:600}
+.chip.miss{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+
+/* ---- walkthrough revisions ---- */
+/* top bar: brand | nav rows | actions */
+.top .in{flex-wrap:nowrap;align-items:center;gap:22px;padding:8px 24px}
+.brandbox{display:flex;flex-direction:column;line-height:1.2;flex:none}
+.top b.brand{margin:0;font-size:13px}.top b.brand small,.brandbox small{display:block;margin:2px 0 0;font-size:11.5px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--grey)}
+.navbox{display:flex;flex-direction:column;gap:3px;min-width:0}
+.navrow{display:flex;align-items:baseline;flex-wrap:wrap;font-size:12px;font-weight:800;line-height:1.5}
+.navrow:empty{display:none}
+.nlab{text-transform:uppercase;letter-spacing:.1em;font-size:11px;margin-right:10px;min-width:104px;color:var(--green)}
+.top a.nl{border:0;padding:0 2px;font-size:13px;text-decoration:none;color:var(--blue)}
+.top a.nl:hover{background:none;color:var(--green);text-decoration:underline}
+.top a.nl:not(:last-child)::after{content:"/";color:var(--grey);font-weight:600;margin:0 7px 0 9px;display:inline-block;text-decoration:none}
+.actions{display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex:none}.arow{display:flex;gap:6px}
+.top .sp{display:block;flex:1}
+@media(max-width:900px){.top .in{flex-wrap:wrap;gap:6px 14px}.navbox{order:3;flex-basis:100%}.top .sp{display:none}.actions{margin-left:auto}.nlab{min-width:0}}
+@media(max-width:700px){.top .in{overflow:visible}.top .in>*{flex:initial}.top .sp{display:none}}
+/* hero alignment */
+.hero p.intro,.priv,.drop,.steps,#status{max-width:760px}
+.loaded{padding-bottom:30px}
+/* parts and per-section accents */
+.part{max-width:none;background:var(--green);color:var(--on-ink);margin:0;padding:34px 24px;border-top:0}
+.part>div{max-width:1080px;margin:0 auto}
+.part small{display:block;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.part h2{margin:4px 0 4px;font-family:var(--font-head);font-size:clamp(28px,5vw,46px);font-weight:900;letter-spacing:-.03em;line-height:1.05}
+.part p{margin:0;max-width:680px;font-size:15px;opacity:.92}
+.part.p2{background:var(--gold);color:var(--on-gold)}
+
+.sec{border-top:4px solid var(--green)}
+.part+.sec{border-top:0}
+.sec .num{color:var(--gold);font-size:46px;letter-spacing:-.03em;white-space:nowrap}
+.num.compass{display:inline-flex;align-items:center;line-height:1}
+/* image-save buttons: one look everywhere */
+.imgbtn,.png{font:inherit;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;line-height:1.4;padding:3px 9px;border:2px solid var(--blue);background:var(--blue);color:var(--on-blue);cursor:pointer;opacity:1}
+.imgbtn:hover,.png:hover{background:#fff;color:var(--blue)}
+.png{position:absolute;top:10px;right:10px}
+.card.has-img>h3{padding-right:104px}
+/* private tag readable in the kit list */
+.pl-h b .tag{color:var(--on-red);background:var(--red);font-size:10px;margin-left:8px}
+.privnote{margin:0 0 14px}.privnote .tag{margin:0 2px}
+.how2{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:900px;margin:0 0 18px}
+@media(max-width:760px){.how2{grid-template-columns:1fr}}
+.how2 h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.1em}.how2 ul{margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink)}.how2 li{margin-bottom:4px}
+/* section 04: three levels */
+.lvl{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:16px;border:3px solid var(--green)}
+.lvl>div{padding:12px 16px;border-left:3px solid var(--green)}.lvl>div:first-child{border-left:0}
+.lvl h4{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.1em}.lvl b{display:block;font-size:34px;font-weight:900;line-height:1.1;font-family:var(--font-head)}.lvl span{font-size:12.5px;color:var(--ink);line-height:1.4;display:block}
+@media(max-width:700px){.lvl{grid-template-columns:1fr}.lvl>div{border-left:0;border-top:3px solid var(--green)}.lvl>div:first-child{border-top:0}}
+.net-hint{font-size:12px;color:var(--grey);margin:8px 0 0}
+.glossy{font-size:12.5px}
+#results:has(>.part.p2:last-child)+.sec{border-top:0}
+</style>
+</head><body>
+<div class="top"><div class="in">
+ <div class="brandbox"><b class="brand">Network Atlas</b><small>for your LinkedIn export</small></div>
+ <div class="navbox" id="navbox"><div class="navrow" id="nav-an"></div><div class="navrow" id="nav-rec"></div></div>
+ <span class="sp"></span>
+ <div class="actions"><div class="arow"><button class="btn pri" id="btn-save" style="display:none">Save report</button><button class="btn" id="btn-print" style="display:none">Print</button></div><div class="arow"><button class="btn" id="btn-style">Colors &amp; fonts</button></div></div>
+</div></div>
+
+<div class="hero" id="hero">
+ <span class="kick">Free &middot; private &middot; runs in your browser</span>
+ <h1>Visualize your LinkedIn data</h1>
+ <p class="intro">You've spent years building a LinkedIn network, but the site only shows you a list of names. Your data export holds the real story: who found you, who you actually talk to, and how your network grew with each job. Drop it here to see it.</p>
+ <p class="priv"><b>Your data never leaves this page.</b> Everything is read and analyzed on your own computer. Nothing is uploaded, stored or sent anywhere. Your private messages are never read, only dates and senders. Your own posts and comments are scanned on your computer to count topic words. Results show counts and categories, never other people's names.</p>
+ <div class="drop" id="drop">
+  <h3>Drop your LinkedIn export here</h3>
+  <p>The .zip file, the unzipped folder, or the CSV files themselves.</p>
+  <div class="row2"><button class="btn pri" id="btn-zip">Choose .zip or CSV files</button><button class="btn" id="btn-folder">Choose a folder</button><button class="btn" id="btn-sample">Try sample data</button></div>
+  <input type="file" id="in-files" accept=".zip,.csv" multiple hidden><input type="file" id="in-folder" webkitdirectory hidden>
+ </div>
+ <div id="status"></div>
+ <details class="steps"><summary>How do I get my LinkedIn export?</summary><ol>
+  <li>On LinkedIn, open <b>Settings &amp; Privacy &rarr; Data privacy &rarr; Get a copy of your data</b>. Menu names change from time to time.</li>
+  <li>Choose <b>Want something in particular?</b> and tick Connections, Messages, Invitations, Posts (Shares), Positions and Company Follows, or choose the full archive.</li>
+  <li>Click <b>Request archive</b>. LinkedIn emails you a link, usually within minutes for a small export and up to 24 hours for the full one.</li>
+  <li>Download the .zip and drop it above. No need to unzip it.</li></ol></details>
+</div>
+
+<div class="loaded" id="loaded" style="display:none"></div>
+<section class="sec" id="s-card" style="display:none">
+ <div class="sh"><span class="num compass" aria-hidden="true"><svg viewBox="0 0 48 48" width="58" height="58"><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4"/><path d="M33 15 L27.5 27.5 L15 33 L20.5 20.5 Z" fill="currentColor"/><circle cx="24" cy="24" r="2.6" fill="#fff"/></svg></span><div><h2>Your summary card</h2><p class="sub">A shareable image of your best numbers, ready to post. It uses your colors and fonts and never names other people.</p></div></div>
+ <div class="cardbox">
+  <div class="cardctl"><div class="seg" id="card-layouts"></div><label id="card-hl-wrap">Headline <select id="card-hl"></select></label><button class="imgbtn" id="card-dl" title="Save this card as a PNG image">Save image</button></div>
+  <div class="cardprev"><canvas id="card-cv"></canvas></div>
+  <p class="note" id="card-note"></p>
+ </div>
+</section>
+<main id="results"></main>
+
+<section class="sec" id="s-ai" style="display:none">
+ <div class="sh"><span class="num" id="ai-num">2.02</span><div><h2>Go deeper with your own AI</h2><p class="sub">Six more analyses need judgment: reading messages, grouping companies, interpreting what LinkedIn inferred. Four more turn your results into a plan, with names, for your eyes only. Hand them to an AI assistant, with this kit.</p></div></div>
+ <div class="kit">
+  <div class="kit-main"><h3>The starter kit</h3>
+   <p>One download with everything an AI assistant needs: standing instructions that keep other people's names out of the results and match your chosen colors and fonts, plus ten ready-made prompts, including a reconnection list and hello drafts.</p>
+   <button class="btn pri" id="btn-kit">Download starter kit (.zip)</button></div>
+  <ol class="kit-steps"><li><b>Unzip</b> the kit into the folder that holds your unzipped LinkedIn export, so the prompts sit next to files like Connections.csv.</li><li><b>Point your AI at that folder.</b> Use an AI assistant that can read files on your computer, such as Claude Code, and start it from inside that folder (or choose that folder when it asks where to work). That is how it reads your CSV files without you uploading them by hand.</li><li><b>Say</b> &ldquo;Read START-HERE.md and run analysis 1.&rdquo;</li></ol>
+ </div>
+ <div class="rec-ai privnote"><b>A word on privacy.</b> This page never sends your data anywhere, but an AI assistant is different. Once you point it at your export, it reads those files and sends what it reads to the company that runs the AI, under that company&rsquo;s data policy. That is true of every prompt below, so check your assistant&rsquo;s privacy settings first (for example, turn off training on your data and use a private or temporary session). <span class="tag">private</span> marks the prompts that also put <i>real names of people in your network</i> into the results, which is what makes them useful for reaching out. Treat those most carefully: don&rsquo;t post, email or share the files, and skip them if you aren&rsquo;t comfortable. The unmarked prompts tell the AI to keep names out of its results, but it still sees the raw files.</div>
+ <h3 class="mini">Or copy a single prompt</h3>
+ <div class="plist" id="ai-grid"></div>
+ <p class="src" style="margin-top:14px">Chat-only assistants cannot read large CSV files. If you use one, paste only small anonymized samples, never other people's messages. Check any AI tool's data policy first: unlike this page, an AI service processes whatever you give it.</p>
+</section>
+
+<footer>
+ <h3>How this works</h3>
+ <p>This page is a single static web page that you open in your browser, and it runs only on your computer. It isn&rsquo;t hosted anywhere and has no server: the file you opened is the whole app.</p>
+ <div class="how2">
+  <div><h4>How to use it</h4><ul>
+   <li>Drop in your LinkedIn export (the .zip, the unzipped folder, or the CSV files).</li>
+   <li>Your browser&rsquo;s own file reader opens the files and everything is analyzed in memory on your device. Nothing is uploaded or stored.</li>
+   <li>Restyle it with Colors &amp; fonts, save your summary card as an image, or save the whole report as a file you can keep or share.</li>
+   <li>The sample data is made up, so you can look around first.</li></ul></div>
+  <div><h4>How it is built</h4><ul>
+   <li>Charts use Chart.js and network graphs use D3.js. The zip is opened with JSZip.</li>
+   <li>The analysis is plain JavaScript. Industries are assigned by simple keyword rules, so treat them as approximate.</li>
+   <li>Relationship tiers come from message dates and senders only. Message text is never read.</li>
+   <li>The only things loaded from the internet are the chart libraries and fonts, never your data.</li></ul></div>
+ </div>
+ <h3>License</h3>
+ <p>Free for noncommercial use. You may use, change and share Network Atlas, keeping the credit below, but not sell it or charge for it. Licensed under the <a href="https://polyformproject.org/licenses/noncommercial/1.0.0" target="_blank" rel="noopener">PolyForm Noncommercial License 1.0.0</a>. The reports you make with it are yours.</p>
+ <h3>Credit</h3>
+ <p>Network Atlas was built by <a href="https://www.linkedin.com/in/marylynn" target="_blank" rel="noopener">Mary-Lynn Bragg</a> with Claude Code. The idea and format are adapted from <a href="https://loganhc-09.github.io/LinkedIn-Data-Export-Visualization/" target="_blank" rel="noopener"><i>Visualize Your LinkedIn Data Export</i></a> by Logan Currie, also built with Claude Code.</p>
+</footer>
+
+<aside id="drawer" aria-label="Colors and fonts"><button class="btn" id="d-close" style="float:right">Close</button>
+ <h3>Palettes</h3><div class="pre" id="d-pre"></div>
+ <h3>Your colors</h3><div class="cols" id="d-cols"></div>
+ <h3>Heading font</h3><select id="d-head"></select><p class="fprev" id="d-hp">Network, in headline</p>
+ <h3>Body font</h3><select id="d-body"></select>
+ <p style="margin-top:18px"><button class="btn" id="d-reset">Reset to default</button></p></aside>
+<script id="src-lib-csv">
+(function(){
+const root=typeof globalThis!=='undefined'?globalThis:window;root.LDV=root.LDV||{};
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(cell);cell=''}
+    else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}
+    else if(c!=='\r')cell+=c;
+  }
+  if(cell.length||row.length){row.push(cell);rows.push(row)}
+  return rows;
+}
+// Some LinkedIn files (Connections.csv) start with a few notes lines. Find the real header row.
+function toObjects(rows,headerStart){
+  let h=0;
+  if(headerStart){h=rows.findIndex(r=>r[0]&&r[0].trim().toLowerCase()===headerStart.toLowerCase());if(h<0)h=0}
+  if(!rows[h])return [];
+  const head=rows[h].map(s=>s.trim());
+  return rows.slice(h+1).filter(r=>r.some(x=>x&&x.trim())).map(r=>{const o={};head.forEach((k,i)=>{o[k]=r[i]===undefined?'':r[i]});return o});
+}
+function toCSV(rows){return rows.map(r=>r.map(v=>{v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\n')}
+root.LDV.csv={parseCSV,toObjects,toCSV};
+})();
+
+</script>
+<script id="src-lib-data">
+(function(){
+const root=typeof globalThis!=='undefined'?globalThis:window;root.LDV=root.LDV||{};
+const csv=root.LDV.csv;
+const MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+const DAY=864e5;
+function norm(u){u=(u||'').trim().toLowerCase().split('?')[0].replace(/\/+$/,'');return u.replace('http://','https://').replace('://linkedin.com','://www.linkedin.com')}
+function parseConnDate(s){const m=/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/.exec(s||'');if(!m)return null;const mon=MON.indexOf(m[2].toLowerCase());if(mon<0)return null;return new Date(Date.UTC(+m[3],mon,+m[1],12))}
+function parseInvDate(s){const m=/(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(s||'');if(m){let y=+m[3];if(y<100)y+=2000;let h=+m[4];const ap=(m[6]||'').toUpperCase();if(ap==='PM'&&h<12)h+=12;if(ap==='AM'&&h===12)h=0;return new Date(Date.UTC(y,+m[1]-1,+m[2],h,+m[5]))}const d=new Date(s);return isNaN(d)?null:d}
+function parseIso(s){if(!s)return null;let t=s.trim().replace(/ UTC$/,'Z').replace(' ','T');if(!/Z$|[+-]\d\d:?\d\d$/.test(t))t+='Z';const d=new Date(t);return isNaN(d)?null:d}
+function parseMonYear(s){const m=/([A-Za-z]{3})[a-z]*\s+(\d{4})/.exec(s||'');if(!m)return null;const mon=MON.indexOf(m[1].toLowerCase());if(mon<0)return null;return new Date(Date.UTC(+m[2],mon,1,12))}
+function parseFollowDate(s){const m=/([A-Za-z]{3})\s+(\d{1,2})\s+(\d\d):(\d\d):(\d\d)\s+\w+\s+(\d{4})/.exec(s||'');if(!m)return null;const mon=MON.indexOf(m[1].toLowerCase());if(mon<0)return null;return new Date(Date.UTC(+m[6],mon,+m[2],+m[3],+m[4],+m[5]))}
+function pick(files,rx){const k=Object.keys(files).find(n=>rx.test(n));return k?files[k]:null}
+function table(files,rx,header){const t=pick(files,rx);return t==null?null:csv.toObjects(csv.parseCSV(t),header)}
+function build(files,opts){
+  opts=opts||{};
+  const out={found:{}};
+  const cr=table(files,/^connections\.csv$/i,'First Name');
+  out.found.connections=!!cr;
+  out.connections=(cr||[]).map(r=>({first:r['First Name'],last:r['Last Name'],url:norm(r['URL']),company:(r['Company']||'').trim(),position:(r['Position']||'').trim(),date:parseConnDate(r['Connected On'])})).filter(c=>c.date);
+  const ir=table(files,/^invitations\.csv$/i);
+  out.found.invitations=!!ir;
+  out.invitations=(ir||[]).map(r=>({dir:(r['Direction']||'').toUpperCase(),date:parseInvDate(r['Sent At']),from:norm(r['inviterProfileUrl']),to:norm(r['inviteeProfileUrl'])})).filter(i=>i.date&&(i.dir==='INCOMING'||i.dir==='OUTGOING'));
+  const mr=table(files,/^messages\.csv$/i);
+  out.found.messages=!!mr;
+  out.messages=(mr||[]).map(r=>({conv:r['CONVERSATION ID'],date:parseIso(r['DATE']),from:norm(r['SENDER PROFILE URL']),to:(r['RECIPIENT PROFILE URLS']||'').split(',').map(norm).filter(Boolean),folder:r['FOLDER']})).filter(m=>m.date);
+  const shareKeys=Object.keys(files).filter(n=>/^shares(_\d+)?\.csv$/i.test(n));
+  out.found.shares=shareKeys.length>0;
+  out.shares=[];
+  shareKeys.forEach(k=>csv.toObjects(csv.parseCSV(files[k])).forEach(r=>{const d=parseIso(r['Date']);if(d)out.shares.push({date:d,text:r['ShareCommentary']||''})}));
+  const pr=table(files,/^positions\.csv$/i);
+  out.found.positions=!!pr;
+  out.positions=(pr||[]).map(r=>({company:(r['Company Name']||'').trim(),title:(r['Title']||'').trim(),start:parseMonYear(r['Started On']),end:parseMonYear(r['Finished On'])})).filter(p=>p.company);
+  const cKeys=Object.keys(files).filter(n=>/^comments(_\d+)?\.csv$/i.test(n));
+  out.comments=[];cKeys.forEach(k=>csv.toObjects(csv.parseCSV(files[k])).forEach(r=>{if(r['Message'])out.comments.push(r['Message'])}));
+  const sk=table(files,/^skills\.csv$/i);out.skills=(sk||[]).map(r=>(r['Name']||'').trim()).filter(Boolean);
+  const pf=table(files,/^profile\.csv$/i);const p0=(pf&&pf[0])||{};
+  out.profile={first:(p0['First Name']||'').trim(),last:(p0['Last Name']||'').trim(),headline:(p0['Headline']||'').trim(),summary:(p0['Summary']||'').trim(),industry:(p0['Industry']||'').trim()};
+  const adr=table(files,/^ad_targeting\.csv$/i);const a0=(adr&&adr[0])||null;
+  const L=k=>a0?(a0[k]||'').split(';').map(s=>s.trim()).filter(Boolean):[];
+  out.found.ad=!!a0;
+  out.ad=a0?{interests:L('Member Interests'),skills:L('Member Skills'),titles:L('Job Titles'),industries:L('Company Industries'),segments:L('Standard Audience Segments'),highValue:L('High Value Audience Segments'),traits:L('Member Traits'),buyer:L('Buyer Groups'),groups:L('Member Groups')}:null;
+  const inf=table(files,/^inferences_about_you\.csv$/i);out.inferences=(inf||[]).map(r=>({category:(r['Category']||'').trim(),type:(r['Type of inference']||'').trim(),value:(r['Inference']||'').trim()})).filter(r=>r.type);
+  const fr=table(files,/^company[ _]follows\.csv$/i);
+  out.found.follows=!!fr;
+  out.follows=(fr||[]).map(r=>({org:(r['Organization']||'').trim(),date:parseFollowDate(r['Followed On'])})).filter(f=>f.org&&f.date);
+  const mfKeys=Object.keys(files).filter(n=>/^member_follows(_\d+)?\.csv$/i.test(n));
+  out.found.memberFollows=mfKeys.length>0;
+  out.memberFollows=[];
+  mfKeys.forEach(k=>csv.toObjects(csv.parseCSV(files[k])).forEach(r=>{const d=parseIso(r['Date']);out.memberFollows.push({date:d,status:(r['Status']||'').trim().toLowerCase()})}));
+  // Who am I? The profile URL that sends the most messages, else the most common invitation party.
+  const cnt={};out.messages.forEach(m=>{if(m.from)cnt[m.from]=(cnt[m.from]||0)+1});
+  let me=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+  if(!me){const c2={};out.invitations.forEach(i=>{const k=i.dir==='INCOMING'?i.to:i.from;if(k)c2[k]=(c2[k]||0)+1});me=Object.keys(c2).sort((a,b)=>c2[b]-c2[a])[0]}
+  out.me=me||'';
+  // "Today" = the latest date anywhere in the export (unless overridden).
+  let now=0;[out.connections,out.invitations,out.messages,out.shares,out.follows].forEach(a=>a.forEach(x=>{if(x.date&&+x.date>now)now=+x.date}));
+  out.now=opts.now||new Date(now||Date.now());
+  return out;
+}
+root.LDV.data={build,norm,DAY};
+})();
+
+</script>
+<script id="src-lib-analysis">
+(function(){
+const root=typeof globalThis!=='undefined'?globalThis:window;root.LDV=root.LDV||{};
+const DAY=864e5;
+const mkey=d=>d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+function monthRange(a,b){const [y0,m0]=a.split('-').map(Number),[y1,m1]=b.split('-').map(Number);const out=[];let y=y0,m=m0;while(y<y1||(y===y1&&m<=m1)){out.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){y++;m=1}}return out}
+function pearson(x,y){const n=x.length;if(n<3)return 0;const mx=x.reduce((a,b)=>a+b,0)/n,my=y.reduce((a,b)=>a+b,0)/n;let sx=0,sy=0,sxy=0;for(let i=0;i<n;i++){sx+=(x[i]-mx)**2;sy+=(y[i]-my)**2;sxy+=(x[i]-mx)*(y[i]-my)}return sx&&sy?sxy/Math.sqrt(sx*sy):0}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function permP(x,y,r0,N=2000){const R=rng(7),yy=y.slice();let c=0;for(let k=0;k<N;k++){for(let i=yy.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[yy[i],yy[j]]=[yy[j],yy[i]]}if(Math.abs(pearson(x,yy))>=Math.abs(r0))c++}return c/N}
+const median=a=>{if(!a.length)return 0;const s=a.slice().sort((p,q)=>p-q),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const ymd=d=>Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+const iso=d=>d.toISOString().slice(0,10);
+
+/* ---------- industry rules (generic keyword rules; approximate) ---------- */
+const IND=[
+['Consulting & Independent',/self[- ]?employed|freelanc|^independent\b|independent consultant/i],
+['Publishing & Research Info',/publish|journal|editorial|elsevier|springer|wiley|wolters|jstor|ebsco|oclc|proquest|clarivate|ex libris|\bpress\b|ithaka|digital science|mcgraw|houghton|scholastic|macmillan|taylor & francis|cengage learning/i],
+['EdTech & Learning',/edtech|e-?learning|learning|educat|academy|tutor|coursera|udemy|\bedx\b|\b2u\b|instructure|canvas|khan|duolingo|byju|chegg|course ?hero|quizlet|skillsoft|pluralsight|kaplan|ixl|ellucian|blackboard|d2l|curriculum|training/i],
+['Higher Ed & Libraries',/universit|college|librar|institute of tech|polytechnic|school|campus|\bmit\b|stanford|harvard/i],
+['Big Tech & Software',/google|microsoft|\bmeta\b|apple|amazon|adobe|salesforce|oracle|\bibm\b|netflix|uber|lyft|linkedin|twitter|snap|slack|zoom|atlassian|dropbox|stripe|shopify|nvidia|intel|cisco|software|\bai\b|\.ai|cloud|\bdata|tech|systems|digital|labs|saas|\bapp\b|platform|engineering|cyber|analytics/i],
+['Finance & Insurance',/bank|capital|financ|fintech|invest|insurance|ventures|equity|credit|mortgage|payments|lending|\bfund|visa|mastercard|paypal|wealth|asset/i],
+['Healthcare & Life Sciences',/health|hospital|medic|pharma|clinic|dental|\bbio|therap|\bcare\b|wellness|genom|laborator|biotech/i],
+['Media, Arts & Entertainment',/media|film|music|studio|entertainment|\bgam(e|ing)|photograph|design|creative|news|radio|museum|theat|\barts?\b/i],
+['Nonprofit, Gov & Associations',/nonprofit|foundation|association|society|government|county|city of|state of|department|council|chamber|federation|\bngo\b|church|ministry|alliance|coalition|commission|agency/i],
+['Consulting & Independent',/consult|advis|partners|\bgroup\b|\bllp\b|\blaw\b|legal|recruit|talent|staffing|solutions|services|logistics|accounting|management/i]];
+const POSR=[['Higher Ed & Libraries',/professor|librarian|\bdean\b|faculty|lecturer|academic|instructional|adjunct|researcher/i],['Big Tech & Software',/software|engineer|developer|data scien|product manager|\bux\b|\bcto\b/i]];
+function classify(company,position){
+  const c=(company||'').trim();
+  if(c)for(const [n,rx] of IND)if(rx.test(c))return n;
+  for(const [n,rx] of POSR)if(rx.test(position||''))return n;
+  return c?'Unclassified':'No company listed';
+}
+function normCompany(c){c=(c||'').trim();if(/self[- ]?employed|freelanc|^independent$/i.test(c))return 'Self-employed / Freelance';return c.replace(/[,.]?\s+(inc|llc|ltd|corp|corporation|co)\.?$/i,'').replace(/\s+/g,' ')}
+const SENIOR=/\bvp\b|vice president|\bsvp\b|\bevp\b|head of|chief|\bc[a-z]o\b|director|president|founder|owner|\bpartner\b|general manager|\bgm\b/i;
+
+/* ---------- 00 overview ---------- */
+function overview(D){
+  const dates=D.connections.map(c=>+c.date),first=dates.length?new Date(Math.min(...dates)):null;
+  return {connections:D.connections.length,since:first?first.getUTCFullYear():null,messages:D.messages.length,posts:D.shares.length,invitations:D.invitations.length,now:iso(D.now)};
+}
+
+/* ---------- 01 clusters ---------- */
+function sec01(D){
+  if(D.connections.length<20)return null;
+  const rows=D.connections.map(c=>({co:normCompany(c.company),ind:classify(normCompany(c.company),c.position)}));
+  const skip=new Set(['Unclassified','No company listed']);
+  const cnt={};rows.forEach(r=>{cnt[r.ind]=(cnt[r.ind]||0)+1});
+  const top=Object.keys(cnt).filter(k=>!skip.has(k)).sort((a,b)=>cnt[b]-cnt[a]).slice(0,9).map(k=>({name:k,count:cnt[k]}));
+  const idx=Object.fromEntries(top.map((t,i)=>[t.name,i]));
+  const emp={};rows.forEach(r=>{if(r.co&&r.co!=='Self-employed / Freelance'&&r.ind in idx){const k=idx[r.ind]+'|'+r.co;emp[k]=(emp[k]||0)+1}});
+  let thr=3;let employers=Object.entries(emp).filter(([,n])=>n>=thr);
+  if(employers.length<4){thr=2;employers=Object.entries(emp).filter(([,n])=>n>=thr)}
+  employers=employers.sort((a,b)=>b[1]-a[1]).slice(0,40).map(([k,n])=>{const [i,...rest]=k.split('|');return {ind:+i,name:rest.join('|'),count:n}});
+  const distinct=new Set(rows.map(r=>r.co).filter(Boolean)).size;
+  // when each cluster's connections were added: a second dimension for the map
+  const yrs=D.connections.map(c=>c.date.getUTCFullYear()),y0=Math.min(...yrs),y1=D.now.getUTCFullYear(),years=[];for(let y=y0;y<=y1;y++)years.push(y);
+  const perInd=top.map(()=>years.map(()=>0));
+  D.connections.forEach((c,i)=>{const k=idx[rows[i].ind];if(k!=null)perInd[k][c.date.getUTCFullYear()-y0]++});
+  const recentFrom=y1-2;
+  const fresh=top.map((t,k)=>{const rec=perInd[k].reduce((s,v,j)=>s+(years[j]>=recentFrom?v:0),0);const med=(()=>{let half=t.count/2,s=0;for(let j=0;j<years.length;j++){s+=perInd[k][j];if(s>=half)return years[j]}return y1})();return {name:t.name,count:t.count,recent:rec,recentPct:t.count?Math.round(100*rec/t.count):0,median:med}});
+  return {years,perInd,fresh,recentFrom,total:rows.length,top,employers,thr,classified:top.reduce((a,t)=>a+t.count,0),unclassified:rows.length-top.reduce((a,t)=>a+t.count,0),distinct,
+    biggestEmployer:Object.entries(rows.reduce((o,r)=>{if(r.co&&r.co!=='Self-employed / Freelance')o[r.co]=(o[r.co]||0)+1;return o},{})).sort((a,b)=>b[1]-a[1])[0]};
+}
+
+/* ---------- 04 posting vs connections ---------- */
+function sec04(D){
+  if(D.shares.length<5||D.connections.length<30)return null;
+  const pm={},cm={};D.shares.forEach(s=>{const k=mkey(s.date);pm[k]=(pm[k]||0)+1});D.connections.forEach(c=>{const k=mkey(c.date);cm[k]=(cm[k]||0)+1});
+  const months=monthRange(Object.keys(pm).sort()[0],mkey(D.now));
+  const x=months.map(m=>pm[m]||0),y=months.map(m=>cm[m]||0);
+  const stat=(a,b)=>{const r=pearson(a,b);return {n:a.length,r:+r.toFixed(3),p:permP(a,b,r)}};
+  const full=stat(x,y),lag1=stat(x.slice(0,-1),y.slice(1)),rev=stat(y.slice(0,-1),x.slice(1));
+  // posts in a month vs. new connections in that month plus the next (LinkedIn keeps surfacing a post for weeks)
+  const y2=y.slice(0,-1).map((v,i)=>v+y[i+1]),win=stat(x.slice(0,-1),y2);
+  const since=months.findIndex(m=>m>='2020-01');
+  const s20=since>=0&&months.length-since>=24?stat(x.slice(since),y.slice(since)):null;
+  const g={};months.forEach((m,i)=>{const k=Math.min(x[i],3);(g[k]=g[k]||[]).push(y[i])});
+  const groups=Object.fromEntries(Object.keys(g).sort().map(k=>[k,{n:g[k].length,mean:+(g[k].reduce((a,b)=>a+b,0)/g[k].length).toFixed(2)}]));
+  const mean=a=>a.length?a.reduce((p,q)=>p+q,0)/a.length:0;
+  const withP=y.filter((_,i)=>x[i]>0),without=y.filter((_,i)=>x[i]===0);
+  return {months,posts:x,conns:y,full,lag1,rev,win,since2020:s20,groups,postMonths:{n:withP.length,mean:+mean(withP).toFixed(1)},noPostMonths:{n:without.length,mean:+mean(without).toFixed(1)},r2:+(win.r**2).toFixed(3),totalPosts:D.shares.length};
+}
+
+/* ---------- 06 inbound vs outbound ---------- */
+function sec06(D){
+  if(!D.invitations.length)return null;
+  const end=D.now,start=new Date(Date.UTC(end.getUTCFullYear(),end.getUTCMonth()-6,end.getUTCDate()));
+  const conn={};D.connections.forEach(c=>{conn[c.url]=c.date});
+  const W=D.invitations.filter(i=>i.date>=start&&i.date<=new Date(+end+DAY));
+  const months=[];for(let k=0;k<6;k++){const d=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()+k,1));months.push(mkey(d))}
+  months.push(...[]);
+  const other=i=>i.dir==='INCOMING'?i.from:i.to;
+  const agg=(dir,m)=>{const xs=W.filter(i=>i.dir===dir&&(!m||mkey(i.date)===m));return [xs.length,xs.filter(i=>conn[other(i)]).length]};
+  const lastInv=mkey(new Date(Math.max(...W.map(i=>+i.date),+start)));
+  const mset=[...new Set([...months,mkey(end)])].sort().filter(m=>m<=lastInv);
+  const res={months:mset,inTot:mset.map(m=>agg('INCOMING',m)[0]),inAcc:mset.map(m=>agg('INCOMING',m)[1]),outTot:mset.map(m=>agg('OUTGOING',m)[0]),outAcc:mset.map(m=>agg('OUTGOING',m)[1]),inAll:agg('INCOMING'),outAll:agg('OUTGOING'),start:iso(start),end:iso(end)};
+  const acc=W.filter(i=>i.dir==='INCOMING'&&conn[other(i)]);
+  const lags=acc.map(i=>Math.max(0,Math.floor((ymd(conn[other(i)])-ymd(i.date))/DAY)));
+  res.lag={n:lags.length,within3:lags.filter(l=>l<=3).length,within14:lags.filter(l=>l>3&&l<=14).length,later:lags.filter(l=>l>14).length,median:median(lags)};
+  const days={};acc.forEach(i=>{const k=iso(conn[other(i)]);days[k]=(days[k]||0)+1});
+  res.batch=Object.entries(days).sort((a,b)=>b[1]-a[1])[0]||null;
+  return res;
+}
+
+/* ---------- 07 relationship tiers ---------- */
+function msgIndex(D){
+  const info={};const get=u=>info[u]||(info[u]={a:[],b:[]});
+  D.messages.forEach(m=>{if(m.from===D.me){m.to.forEach(r=>{if(r&&r!==D.me)get(r).a.push(m.date)})}else if(m.from)get(m.from).b.push(m.date)});
+  return info;
+}
+function sec07(D){
+  if(!D.messages.length||D.connections.length<20||!D.me)return null;
+  const info=msgIndex(D),now=D.now;
+  const cats=['Active','Some contact','Going stale','Dormant','Never messaged'];
+  const rows=D.connections.map(c=>{const i=info[c.url];const all=i?i.a.concat(i.b):[];const last=all.length?new Date(Math.max(...all)):null;const days=last?Math.floor((now-last)/DAY):null;
+    const cat=last==null?4:days<=90?0:days<=365?1:days<=730?2:3;
+    return {cat,two:!!(i&&i.a.length&&i.b.length),theirs:!!(i&&i.b.length),mine:!!(i&&i.a.length),days,date:c.date}});
+  const counts=cats.map((_,k)=>rows.filter(r=>r.cat===k).length);
+  const two=cats.map((_,k)=>rows.filter(r=>r.cat===k&&r.two).length);
+  const theirs=cats.map((_,k)=>rows.filter(r=>r.cat===k&&!r.two&&r.theirs).length);
+  const mine=cats.map((_,k)=>rows.filter(r=>r.cat===k&&!r.two&&!r.theirs&&r.mine).length);
+  const y0=Math.min(...rows.map(r=>r.date.getUTCFullYear())),y1=now.getUTCFullYear();const years=[];for(let y=y0;y<=y1;y++)years.push(y);
+  const recent=rows.filter(r=>(now-r.date)/DAY<=365);
+  return {cats,total:rows.length,counts,two,theirs,mine,years,yrMsg:years.map(y=>rows.filter(r=>r.date.getUTCFullYear()===y&&r.cat<4).length),yrNever:years.map(y=>rows.filter(r=>r.date.getUTCFullYear()===y&&r.cat===4).length),
+    pyramid:[rows.length,rows.filter(r=>r.cat<4).length,rows.filter(r=>r.two).length,rows.filter(r=>r.two&&r.cat<=1).length,rows.filter(r=>r.two&&r.cat===0).length],
+    newYear:recent.length,newYearNever:recent.filter(r=>r.cat===4).length,oneWayDormant:theirs[1]+theirs[2]+theirs[3]};
+}
+
+/* ---------- 08 timeline ---------- */
+function sec08(D){
+  if(!D.connections.length)return null;
+  const end=D.now,start=new Date(Date.UTC(end.getUTCFullYear(),end.getUTCMonth()-6,end.getUTCDate()));
+  const inv={};D.invitations.forEach(i=>{inv[i.dir==='INCOMING'?i.from:i.to]={dir:i.dir,date:i.date}});
+  const info=D.messages.length&&D.me?msgIndex(D):{};
+  const rows=D.connections.filter(c=>c.date>=start).sort((a,b)=>b.date-a.date).map((c,k)=>{
+    const iv=inv[c.url],i=info[c.url]||{a:[],b:[]};const cd=ymd(c.date);
+    const a=i.a.filter(d=>ymd(d)>=cd),b=i.b.filter(d=>ymd(d)>=cd);const all=a.concat(b);
+    return {id:k+1,date:iso(c.date),init:iv?(iv.dir==='OUTGOING'?'You':'Them'):'Unknown',mine:a.length,theirs:b.length,total:all.length,last:all.length?iso(new Date(Math.max(...all))):null,ind:classify(normCompany(c.company),c.position)};
+  });
+  if(rows.length<5)return null;
+  return {rows,start:iso(start),end:iso(end),n:rows.length,theyAsked:rows.filter(r=>r.init==='Them').length,messaged:rows.filter(r=>r.total>0).length,twoWay:rows.filter(r=>r.mine>0&&r.theirs>0).length,known:rows.filter(r=>r.init!=='Unknown').length};
+}
+
+/* ---------- 10 career layers ---------- */
+function sec10(D){
+  if(D.connections.length<30)return null;
+  const P=D.positions.filter(p=>p.start).sort((a,b)=>a.start-b.start);
+  const firstConn=new Date(Math.min(...D.connections.map(c=>+c.date))),now=D.now;
+  let eras=[];
+  const perRole=P.length<=9;
+  P.forEach(p=>{const l=eras[eras.length-1];if(!perRole&&l&&l.company.toLowerCase()===p.company.toLowerCase()){l.titles.push(p.title);l.end=(l.end&&p.end)?(p.end>l.end?p.end:l.end):null}else eras.push({company:p.company,start:p.start,end:p.end,titles:[p.title],role:p.title})});
+  const out=[];
+  if(!eras.length){
+    const y0=firstConn.getUTCFullYear();const step=Math.max(2,Math.ceil((now.getUTCFullYear()-y0+1)/6));
+    for(let y=y0;y<=now.getUTCFullYear();y+=step)out.push({name:y+'–'+Math.min(y+step-1,now.getUTCFullYear()),sub:'No job history found, so grouped by years',start:new Date(Date.UTC(y,0,1)),end:new Date(Date.UTC(Math.min(y+step,now.getUTCFullYear()+1),0,1))});
+  }else{
+    if(+eras[0].start>+firstConn+30*DAY)out.push({name:'Before '+eras[0].company,sub:'Earlier career',start:firstConn,end:eras[0].start});
+    eras.forEach((e,i)=>{const nxt=eras[i+1];const t=e.titles.filter(Boolean);out.push({name:perRole&&e.role?e.company+' · '+e.role:e.company,sub:perRole?'':(t.length>1?t[0]+' → '+t[t.length-1]:(t[0]||'')),start:e.start,end:nxt?nxt.start:(e.end||new Date(+now+DAY))})});
+    const last=eras[eras.length-1];
+    if(last.end&&last.end<new Date(+now-30*DAY))out.push({name:'After '+last.company,sub:'Since the last listed role',start:last.end,end:new Date(+now+DAY)});
+  }
+  const used=out.slice(-10);
+  const e0=out.length>10?out.length-10:0;
+  const assign=d=>{let k=-1;used.forEach((e,i)=>{if(d>=e.start)k=i});if(k<0)k=0;return k};
+  const y0=firstConn.getUTCFullYear(),y1=now.getUTCFullYear();const years=[];for(let y=y0;y<=y1;y++)years.push(y);
+  const cnt=used.map(()=>years.map(()=>0));
+  D.connections.forEach(c=>{cnt[assign(c.date)][c.date.getUTCFullYear()-y0]++});
+  const cum=cnt.map(row=>{let s=0;return row.map(v=>(s+=v))});
+  const eraOut=used.map((e,i)=>{const n=cnt[i].reduce((a,b)=>a+b,0);const s=i===0?Math.min(+firstConn,+e.start):+e.start;const yrs=Math.max(0.25,(Math.min(+e.end,+now)-s)/(365.25*DAY));return {name:e.name,sub:e.sub,start:iso(new Date(Math.min(+e.start,+firstConn)<+e.start&&i===0?firstConn:e.start)),end:iso(new Date(Math.min(+e.end,+now))),n,perYear:+(n/yrs).toFixed(1)}});
+  const yt=years.map((_,j)=>cnt.reduce((a,r)=>a+r[j],0));const pk=yt.indexOf(Math.max(...yt));
+  return {years,eras:eraOut,cnt,cum,total:D.connections.length,peakYear:years[pk],peakCount:yt[pk],hasPositions:P.length>0};
+}
+
+/* ---------- follows ---------- */
+function nrmOrg(s){return (s||'').toLowerCase().replace(/[,.&'\u2019\-]/g,' ').replace(/\s+/g,' ').trim().replace(/\s(inc|llc|ltd|corp|corporation|co|company)$/,'').trim()}
+function secFol(D){
+  if(!D.follows||D.follows.length<5)return null;
+  const co={};D.connections.forEach(c=>{const k=nrmOrg(c.company);if(k)co[k]=(co[k]||0)+1});const keys=Object.keys(co);
+  const count=name=>{const k=nrmOrg(name);if(!k)return 0;let n=co[k]||0;if(!n&&k.length>=5)for(const c of keys){if(c.length>=5&&(c.startsWith(k+' ')||k.startsWith(c+' ')))n+=co[c]}return n};
+  const rows=D.follows.slice().sort((a,b)=>a-b===0?0:a.date-b.date).map(f=>({name:f.org,date:f.date,conn:count(f.org)}));
+  const years=[];const y0=rows[0].date.getUTCFullYear(),y1=D.now.getUTCFullYear();for(let y=y0;y<=y1;y++)years.push(y);
+  const perYear=years.map(y=>rows.filter(r=>r.date.getUTCFullYear()===y).length);let s=0;const cum=perYear.map(v=>(s+=v));
+  const last12=rows.filter(r=>(D.now-r.date)/DAY<=365).length;
+  const withConn=rows.filter(r=>r.conn>0),without=rows.filter(r=>r.conn===0);
+  const days={};rows.forEach(r=>{const k=r.date.toISOString().slice(0,10);days[k]=(days[k]||0)+1});
+  const bigDay=Object.entries(days).sort((a,b)=>b[1]-a[1])[0];
+  const mf=D.memberFollows||[];const st=k=>mf.filter(m=>m.status===k).length;
+  return {total:rows.length,years,perYear,cum,last12,withConn:withConn.length,without:without.length,connPct:Math.round(100*withConn.length/rows.length),
+    topConn:withConn.slice().sort((a,b)=>b.conn-a.conn).slice(0,10).map(r=>({name:r.name,n:r.conn})),noConn:without.slice().reverse().slice(0,40).map(r=>r.name),
+    bigDay:bigDay&&bigDay[1]>=5?{date:bigDay[0],n:bigDay[1]}:null,
+    people:mf.length?{total:mf.length,active:st('active'),unfollowed:st('unfollow'),muted:st('mute')}:null,first:rows[0].date.toISOString().slice(0,10)};
+}
+
+/* ---------- mirror: what LinkedIn thinks vs. what you do ---------- */
+const STOP=new Set(('a about above after again all also am an and any are as at be because been before being below between both but by can could did do does doing down during each few for from further had has have having he her here hers him his how i if in into is it its just me more most my no nor not now of off on once only or other our ours out over own same she should so some such than that the their them then there these they this those through to too under until up very was we were what when where which while who whom why will with would you your yours get got make made new one two three may us per via etc like using use used work working well '+
+ 'opportunity opportunities looking need needs know knows year years even people time great really think help want wants things thing going today love back take come around many lot next first last long good best better always never still much every thank thanks hope happy excited proud join joined team share sharing check read see saw look seen said say says way ways day days week weeks month months part find found give gave let lets might must shall since while within without across along among whether either neither however also than connect connecting connected interested open passionate experienced seeking currently previously focused driven helping helped').split(' '));
+const GENERIC=new Set('software management service services solution solutions system systems platform platforms tool tools business digital technology technologies online mobile based general related industry company companies team teams program programs project projects'.split(' '));
+function stemOf(w){w=w.toLowerCase().replace(/[^a-z]/g,'');if(w.length>6&&/ing$/.test(w))w=w.slice(0,-3);else if(w.length>5&&/ed$/.test(w))w=w.slice(0,-2);else if(w.length>5&&/ies$/.test(w))w=w.slice(0,-3)+'y';else if(w.length>4&&/s$/.test(w)&&!/ss$/.test(w))w=w.slice(0,-1);return w}
+function words(text){return (text.match(/[A-Za-z][A-Za-z'’]*/g)||[]).map(w=>({raw:w.replace(/’/g,"'"),st:stemOf(w.replace(/'s$/i,''))})).filter(x=>x.st.length>=3&&!STOP.has(x.raw.toLowerCase()))}
+function secMirror(D){
+  if(!D.ad||D.ad.interests.length<10)return null;
+  // Text units: each skill, job title, organization name, and each sentence you wrote
+  const units=[];
+  const addUnit=(text,src)=>{const st=new Set(words(text).map(w=>w.st).filter(s=>!GENERIC.has(s)));if(st.size)units.push({st,src})};
+  const sentences=t=>(t||'').split(/[.!?\n]+/).map(s=>s.trim()).filter(s=>s.length>3);
+  D.skills.forEach(s=>addUnit(s,'your skills'));
+  D.positions.forEach(p=>addUnit(p.title,'your job titles'));
+  const pf=D.profile||{};sentences(pf.headline).forEach(s=>addUnit(s,'your headline'));sentences(pf.summary).forEach(s=>addUnit(s,'your summary'));
+  D.shares.forEach(x=>sentences(x.text).forEach(s=>addUnit(s,'your posts')));D.comments.forEach(t=>sentences(t).forEach(s=>addUnit(s,'your comments')));
+  (D.follows||[]).forEach(f=>addUnit(f.org,'organizations you follow'));
+  // Echo test: an interest counts only if all its key words appear together in one unit
+  const prio=['your skills','your job titles','your headline','your summary','your posts','your comments','organizations you follow'];
+  const echoed=[],noTrace=[];
+  D.ad.interests.forEach(tag=>{
+    const st=[...new Set(words(tag).map(w=>w.st).filter(s=>!GENERIC.has(s)))];
+    if(!st.length)return;
+    const hits=units.filter(u=>st.every(s=>u.st.has(s)));
+    if(hits.length){const srcs=hits.map(h=>h.src);echoed.push({tag,src:prio.find(p=>srcs.includes(p))||srcs[0]})}else noTrace.push(tag);
+  });
+  const nTags=echoed.length+noTrace.length;
+  // Blind spots: topic words from your skills, titles and profile text that LinkedIn's lists lack
+  const li=new Set();[D.ad.interests,D.ad.skills,D.ad.titles,D.ad.industries,D.ad.segments,D.ad.highValue,D.ad.buyer,D.ad.traits].forEach(arr=>arr.forEach(t=>words(t).forEach(w=>{if(!GENERIC.has(w.st))li.add(w.st)})));
+  const term={};
+  const eligible=(text,wt)=>words(text).forEach(w=>{if(GENERIC.has(w.st))return;const o=term[w.st]||(term[w.st]={n:0,forms:{},elig:false});o.n+=wt;o.elig=true;const lw=w.raw.toLowerCase();o.forms[lw]=(o.forms[lw]||0)+1});
+  const extra=(text)=>words(text).forEach(w=>{const o=term[w.st];if(o&&w.raw[0]===w.raw[0].toLowerCase())o.n+=1});
+  D.skills.forEach(s=>eligible(s,3));D.positions.forEach(p=>eligible(p.title,2));eligible(pf.headline||'',3);eligible(pf.summary||'',2);
+  D.shares.forEach(x=>extra(x.text||''));D.comments.forEach(extra);
+  const rows=Object.entries(term).filter(([st,o])=>o.elig&&o.n>=4).map(([st,o])=>({st,term:Object.entries(o.forms).sort((a,b)=>b[1]-a[1])[0][0],n:o.n})).filter(r=>r.term.length>=4).sort((a,b)=>b.n-a.n);
+  const top=rows.slice(0,20),unknown=top.filter(r=>!li.has(r.st));
+  const accuracy=nTags?Math.round(100*echoed.length/nTags):0,coverage=top.length?Math.round(100*(top.length-unknown.length)/top.length):0,fit=(accuracy+coverage)?Math.round(2*accuracy*coverage/(accuracy+coverage)):0;
+  return {nTags,echoed:echoed.length,noTraceN:noTrace.length,echoPct:accuracy,accuracy,coverage,fit,topList:top.slice(0,16).map(r=>({term:r.term,known:li.has(r.st)})),
+    echoedSample:echoed.slice(0,14),noTrace:noTrace.slice(0,18),
+    topTerms:top.length,unknownN:unknown.length,unknown:unknown.slice(0,12).map(r=>({term:r.term,n:r.n})),
+    inferences:D.inferences.filter(x=>!/gender|\bage\b|ethnic|race|religio|sexual|politic|disab|health/i.test(x.type)).slice(0,8).map(x=>({type:x.type,value:x.value})),segments:D.ad.segments.slice(0,8),
+    signals:{skills:D.skills.length,posts:D.shares.length+D.comments.length,titles:D.positions.length,follows:(D.follows||[]).length}};
+}
+root.LDV.an={overview,sec01,sec04,sec06,sec07,sec08,sec10,secFol,secMirror,classify,normCompany};
+})();
+
+</script>
+<script id="src-lib-style">
+(function(){
+const root=window;root.LDV=root.LDV||{};
+const SLOTS=[['ink','Ink','Text, borders and dark tiles'],['gold','Accent 1','Highlights and big numbers'],['red','Accent 2','Calls to attention'],['blue','Accent 3','Primary chart color'],['purple','Accent 4','Fourth chart color'],['grey','Neutral','Muted text and axes'],['soft','Soft','Backgrounds and takeaways']];
+const PRESETS=[
+ {id:'bold',name:'Bold',c:{ink:'#062a30',gold:'#cca300',red:'#ed4319',blue:'#275273',purple:'#46004E',grey:'#8b8d92',soft:'#e1d9c1'}},
+ {id:'sage',name:'Sage & Gold',c:{ink:'#2f3e3f',gold:'#b8943d',red:'#9a6a6a',blue:'#5a8384',purple:'#7a6a8a',grey:'#8a7060',soft:'#ebe5d6'}},
+ {id:'ocean',name:'Ocean',c:{ink:'#0b2545',gold:'#f4a259',red:'#e63946',blue:'#13315c',purple:'#5b8e7d',grey:'#8da9c4',soft:'#e3edf4'}},
+ {id:'berry',name:'Berry',c:{ink:'#2b0a3d',gold:'#f2a900',red:'#d81b60',blue:'#5e35b1',purple:'#00897b',grey:'#9a8fa6',soft:'#f1e3f5'}},
+ {id:'forest',name:'Forest',c:{ink:'#1b3a2d',gold:'#e0a458',red:'#c8553d',blue:'#2d6a4f',purple:'#6a4c93',grey:'#8a9a8f',soft:'#e6eee0'}},
+ {id:'access',name:'High contrast',c:{ink:'#000000',gold:'#7a5c00',red:'#b3001b',blue:'#00468c',purple:'#5a1a8c',grey:'#4d4d4d',soft:'#e6e6e6'}},
+ {id:'news',name:'Newsprint',c:{ink:'#111111',gold:'#d4a017',red:'#c0392b',blue:'#1f3a5f',purple:'#555555',grey:'#8c8c8c',soft:'#ececec'}}];
+const FONTS=[
+ {n:'Inter',f:"'Inter',sans-serif",g:'Inter:wght@400;600;800;900'},
+ {n:'DM Sans',f:"'DM Sans',sans-serif",g:'DM+Sans:wght@400;600;800;900'},
+ {n:'Space Grotesk',f:"'Space Grotesk',sans-serif",g:'Space+Grotesk:wght@400;600;700'},
+ {n:'Poppins',f:"'Poppins',sans-serif",g:'Poppins:wght@400;600;800;900'},
+ {n:'Work Sans',f:"'Work Sans',sans-serif",g:'Work+Sans:wght@400;600;800;900'},
+ {n:'IBM Plex Sans',f:"'IBM Plex Sans',sans-serif",g:'IBM+Plex+Sans:wght@400;600;700'},
+ {n:'Source Sans 3',f:"'Source Sans 3',sans-serif",g:'Source+Sans+3:wght@400;600;800;900'},
+ {n:'Lora',f:"'Lora',serif",g:'Lora:wght@400;600;700'},
+ {n:'Merriweather',f:"'Merriweather',serif",g:'Merriweather:wght@400;700;900'},
+ {n:'Playfair Display',f:"'Playfair Display',serif",g:'Playfair+Display:wght@400;700;900'},
+ {n:'Roboto Slab',f:"'Roboto Slab',serif",g:'Roboto+Slab:wght@400;600;900'},
+ {n:'JetBrains Mono',f:"'JetBrains Mono',monospace",g:'JetBrains+Mono:wght@400;700;800'}];
+const KEY=window.__REPORT__?'ldv-style-report':'ldv-style-v1';
+let state={preset:'bold',c:Object.assign({},PRESETS[0].c),head:'Inter',body:'Inter'};
+if(window.__STYLE__&&window.__STYLE__.c)state=Object.assign(state,window.__STYLE__,{c:Object.assign({},PRESETS[0].c,window.__STYLE__.c)});
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.c)state=Object.assign(state,s,{c:Object.assign({},PRESETS[0].c,s.c)})}catch(e){}
+const loaded=new Set();
+function loadFont(name){const f=FONTS.find(x=>x.n===name);if(!f||loaded.has(name))return;loaded.add(name);const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+f.g+'&display=swap';document.head.appendChild(l)}
+function lum(hex){const h=hex.replace('#','');const v=[0,2,4].map(i=>parseInt(h.substr(i,2),16)/255).map(x=>x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4));return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2]}
+function contrast(a,b){const A=lum(a),B=lum(b);return (Math.max(A,B)+0.05)/(Math.min(A,B)+0.05)}
+function on(bg,ink){return contrast(bg,'#ffffff')>=3?'#ffffff':ink}
+function mix(a,b,t){const p=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));const A=p(a),B=p(b);return '#'+A.map((v,i)=>Math.round(v*(1-t)+B[i]*t).toString(16).padStart(2,'0')).join('')}
+function apply(){
+  const r=document.documentElement.style,c=state.c;
+  const map={ink:'--green',gold:'--gold',red:'--red',blue:'--blue',purple:'--purple',grey:'--grey',soft:'--beige'};
+  Object.keys(map).forEach(k=>r.setProperty(map[k],c[k]));
+  ['gold','red','blue','purple','grey','soft','ink'].forEach(k=>r.setProperty('--on-'+k,on(c[k],c.ink)));
+  r.setProperty('--num',contrast(c.gold,c.ink)>=3?c.gold:'#ffffff');
+  const tt=col=>contrast(col,'#ffffff')>=3?col:mix(col,c.ink,.45);
+  [['blue',c.blue],['gold',c.gold],['red',c.red],['purple',c.purple]].forEach(([k,v])=>r.setProperty('--'+k+'-t',tt(v)));
+  r.setProperty('--tint',mix(c.soft,'#ffffff',.6));
+  const hf=FONTS.find(f=>f.n===state.head)||FONTS[0],bf=FONTS.find(f=>f.n===state.body)||FONTS[0];
+  loadFont(hf.n);loadFont(bf.n);
+  r.setProperty('--font-head',hf.f);r.setProperty('--font-body',bf.f);
+  try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+}
+function C(){const c=state.c;return Object.assign({},c,{cat:[c.blue,c.gold,c.red,c.purple,c.ink,c.grey,mix(c.blue,'#ffffff',.45),mix(c.gold,'#ffffff',.45),mix(c.red,'#ffffff',.45),mix(c.purple,'#ffffff',.45)],font:(FONTS.find(f=>f.n===state.body)||FONTS[0]).f.split(',')[0].replace(/'/g,'')})}
+root.LDV.style={SLOTS,PRESETS,FONTS,get:()=>state,C,apply,mix,
+  setPreset(id){const p=PRESETS.find(x=>x.id===id);if(p){state.preset=id;state.c=Object.assign({},p.c)}apply()},
+  setColor(k,v){state.c[k]=v;state.preset='custom';apply()},
+  setFont(which,n){state[which]=n;apply()},
+  reset(){state={preset:'bold',c:Object.assign({},PRESETS[0].c),head:'Inter',body:'Inter'};apply()}};
+})();
+
+</script>
+<script id="src-lib-sample">
+(function(){
+const root=window;root.LDV=root.LDV||{};
+const csv=()=>root.LDV.csv;
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function files(){
+  const R=rng(42),pick=a=>a[Math.floor(R()*a.length)],NOW=Date.UTC(2026,9,3);
+  const DAY=864e5,MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const cos=['Northwind Learning','Brightpath Education','Atlas University','Summit College','Harbor Software','Cloudline Systems','Nimbus Cloud','Quartz Analytics','Helio Health','Granite Bank','Meridian Capital','Lumen Publishing','Orchard Press','Foundry Media','Beacon Foundation','Civic Alliance','Compass Consulting','Pioneer Advisors','Northwind Learning','Brightpath Education','Harbor Software','Atlas University','Self-employed','Freelance','Lumen Publishing','Cloudline Systems','Summit College'];
+  const pos=['Product Manager','Director of Partnerships','Software Engineer','Professor','Librarian','Account Executive','Founder','Head of Growth','Program Manager','Designer','Consultant','VP of Customer Success','Data Analyst','Recruiter','Marketing Director'];
+  const me='https://www.linkedin.com/in/sample-user';
+  // connections: denser in later years
+  const conns=[];const N=430;
+  for(let i=0;i<N;i++){const t=Math.pow(R(),0.65);const y0=Date.UTC(2008,0,1);const d=y0+t*(NOW-y0-DAY);conns.push({i,d:Math.floor(d/DAY)*DAY+12*36e5,co:pick(cos),pos:pick(pos),url:'https://www.linkedin.com/in/person-'+(1000+i)})}
+  conns.sort((a,b)=>a.d-b.d);
+  // bursts (conference weeks)
+  conns.forEach(c=>{const dt=new Date(c.d);if(dt.getUTCFullYear()>=2022&&R()<.18){const moved=Date.UTC(dt.getUTCFullYear(),R()<.5?3:9,10+Math.floor(R()*6),12);if(moved<NOW-DAY)c.d=moved}});
+  conns.sort((a,b)=>a.d-b.d);
+  const fmtC=d=>{const x=new Date(d);return x.getUTCDate()+' '+MON[x.getUTCMonth()]+' '+x.getUTCFullYear()};
+  const cRows=[['Notes:'],['"When exporting your connection data, you may notice that some of the email addresses are missing."'],[''],['First Name','Last Name','URL','Email Address','Company','Position','Connected On']].concat(conns.map((c,i)=>['Pat'+i,'Sample',c.url,'',c.co,c.pos,fmtC(c.d)]));
+  // invitations for last ~10 months
+  const inv=[['From','To','Sent At','Message','Direction','inviterProfileUrl','inviteeProfileUrl']];
+  const fmtI=d=>{const x=new Date(d);let h=x.getUTCHours();const ap=h>=12?'PM':'AM';h=h%12||12;return (x.getUTCMonth()+1)+'/'+x.getUTCDate()+'/'+String(x.getUTCFullYear()).slice(2)+', '+h+':'+String(x.getUTCMinutes()).padStart(2,'0')+' '+ap};
+  conns.filter(c=>c.d>NOW-300*DAY).forEach(c=>{const out=R()<.1;const sent=Math.min(NOW-DAY,c.d-Math.floor(R()*(out?2:14))*DAY-3*36e5);inv.push([out?'Sample User':'Pat Sample',out?'Pat Sample':'Sample User',fmtI(sent),'',out?'OUTGOING':'INCOMING',out?me:c.url,out?c.url:me])});
+  for(let i=0;i<55;i++){const sent=NOW-Math.floor(R()*180)*DAY-5*36e5;inv.push(['Stranger'+i,'Sample User',fmtI(sent),'','INCOMING','https://www.linkedin.com/in/stranger-'+i,me])}
+  // messages
+  const msg=[['CONVERSATION ID','CONVERSATION TITLE','FROM','SENDER PROFILE URL','TO','RECIPIENT PROFILE URLS','DATE','SUBJECT','CONTENT','FOLDER','ATTACHMENTS']];
+  const fmtM=d=>new Date(d).toISOString().slice(0,19).replace('T',' ')+' UTC';
+  let cid=0;
+  conns.forEach(c=>{const r=R();if(r>.28)return;cid++;const k='conv'+cid;const n=1+Math.floor(R()*5);const mutual=R()<.55;const start=c.d+Math.floor(R()*20)*DAY;const span=Math.floor(R()*400)*DAY;
+    for(let j=0;j<n;j++){const t=Math.min(NOW-DAY,start+span*(j/Math.max(1,n-1)));const mine=mutual?(j%2===1):false;
+      msg.push([k,'',mine?'Sample User':'Pat Sample',mine?me:c.url,mine?'Pat Sample':'Sample User',mine?c.url:me,fmtM(t),'','(text not used)','INBOX',''])}});
+  for(let i=0;i<60;i++){cid++;const t=NOW-Math.floor(R()*900)*DAY;msg.push(['conv'+cid,'','Stranger'+i,'https://www.linkedin.com/in/stranger-'+i,'Sample User',me,fmtM(t),'','(text not used)','INBOX',''])}
+  // shares
+  const POSTS=['Excited to share what our team learned about helping working adults build new skills. Partnerships matter more than any single program.','Three lessons from a year of growth strategy: listen first, test small, and measure learning outcomes.','Proud of our customer success team for supporting universities through a hard semester. Great teams make hard work easier.','Reflecting on a decade in education technology. The best products start with a real conversation with a teacher.','Hiring for a partnerships role. If you care about workforce training and employer relationships, let us talk.'];
+  const sh=[['Date','ShareLink','ShareCommentary','SharedUrl','MediaUrl','Visibility']];
+  for(let i=0;i<34;i++){const y=2013+Math.floor(R()*14);const m=Math.floor(R()*12);const d=Date.UTC(y,m,1+Math.floor(R()*27),15);if(d<NOW-DAY)sh.push([fmtM(d).replace(' UTC',''),'',pick(POSTS),'','','MEMBER_NETWORK'])}
+  // positions
+  const P=[['Company Name','Title','Description','Location','Started On','Finished On'],['Orchard Press','Associate Editor','','','Jan 2009','Mar 2013'],['Harbor Software','Account Manager','','','Apr 2013','Aug 2017'],['Northwind Learning','Director of Partnerships','','','Sep 2017','Jun 2022'],['Brightpath Education','VP of Growth','','','Jul 2022','']];
+  // follows
+  const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const fmtF=d=>{const x=new Date(d);const p=n=>String(n).padStart(2,'0');return DN[x.getUTCDay()]+' '+MON[x.getUTCMonth()]+' '+p(x.getUTCDate())+' '+p(x.getUTCHours())+':'+p(x.getUTCMinutes())+':'+p(x.getUTCSeconds())+' UTC '+x.getUTCFullYear()};
+  const orgs=['Northwind Learning','Brightpath Education','Atlas University','Summit College','Harbor Software','Cloudline Systems','Nimbus Cloud','Quartz Analytics','Helio Health','Granite Bank','Meridian Capital','Lumen Publishing','Orchard Press','Foundry Media','Beacon Foundation','Civic Alliance','Compass Consulting','Pioneer Advisors','Aster Robotics','Willow Labs','Tidewater Energy','Juniper Foods','Cobalt Mobility','Redwood Ventures','Sable Design','Fjord Analytics','Mosaic Health','Lantern Learning','Keystone Capital','Polar Cloud','Ember Media','Quill Press','Vantage Systems','Harvest Foundation','Bluebird Education','Ironwood Software','Delta Logistics','Sage Wellness','Aurora AI','Pebble Labs'];
+  const fol=[['Organization','Followed On']];
+  orgs.forEach((o,i)=>{const d=NOW-Math.floor(Math.pow(R(),1.8)*3000)*DAY;fol.push([o,fmtF(d)])});
+  const mfol=[['Date','Status','FullName']];
+  for(let i=0;i<30;i++){const st=R()<.7?'Active':R()<.6?'Unfollow':'Mute';mfol.push([fmtM(NOW-Math.floor(R()*1500)*DAY).replace(' UTC',''),st,'Person '+i])}
+  const skills=[['Name'],['Partnerships'],['Customer Success'],['Growth Strategy'],['Educational Technology'],['Higher Education'],['Project Management'],['Business Development'],['Account Management'],['Workforce Development'],['Product Management'],['Strategic Planning'],['Training']];
+  const profile=[['First Name','Last Name','Headline','Summary','Industry'],['Sample','User','Director of Partnerships | Education and workforce learning','I build partnerships between education providers and employers. I care about workforce training, customer success and helping working adults learn new skills.','Higher Education']];
+  const ad=[['Member Interests','Member Skills','Job Titles','Company Industries','Standard Audience Segments','High Value Audience Segments','Member Traits','Buyer Groups'],[
+    'Digital Marketing; Call Center Software; Corporate Finance; Market Research; E-Learning; Higher Education; Project Management; Customer Relationship Management; Cloud Management Software; Student Loans; Digital Banking; Advertising Strategies; Strategic Management; Human Resources Software; Content Strategy; Startups; Data Science; Video Conferencing Software; Remote Working; Sales Software; Education; Business Plan; Workplace Wellness; B2B Marketing',
+    'Brand Strategy; Strategic Planning; Product Marketing; Customer Education; Partnership Development; Business Growth Strategies; Program Management; Educational Equity',
+    'Operations Manager; Program Specialist; Head of Marketing; Director of Customer Success; Director of Growth',
+    'Education; Technology, Information and Internet; Higher Education',
+    'Tech Go to Market Leaders; Brand and Marketing Architects; Growth Drivers; Senior Education Influencers',
+    'Senior Tech Decision Makers; Working Professionals','Mac; Career Changers','Marketing Software; Sales Software; Education Software']];
+  const inf=[['Category','Type of inference','Description','Inference'],['Career inferences','Freelancer','Based on your profile.','true'],['Career inferences','Human resources professional','Based on your industry.','No'],['Inferred personal characteristics','Inferred gender','Based on your first name.','FEMALE'],['Job search inferences','Interested in a new job','Based on searches.','true']];
+  const T=a=>csv().toCSV(a)+'\n';
+  return {'Connections.csv':T(cRows),'Invitations.csv':T(inv),'messages.csv':T(msg),'Shares.csv':T(sh),'Positions.csv':T(P),'Company Follows.csv':T(fol),'Skills.csv':T(skills),'Profile.csv':T(profile),'Ad_Targeting.csv':T(ad),'Inferences_about_you.csv':T(inf),'Member_Follows_000.csv':T(mfol)};
+}
+root.LDV.sample={files};
+})();
+
+</script>
+<script id="src-lib-recs">
+(function(){
+const root=window;root.LDV=root.LDV||{};
+const fmt=n=>Number(n).toLocaleString('en-US');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Rule-based recommendations. Each rule looks at the section results and returns a card with a score, or null. */
+function rules(res){
+  const out=[];
+  const r7=res.s07,r6=res.s06,r4=res.s04,r1=res.s01;
+
+  // 1. Wake up dormant ties
+  if(r7){
+    const d=r7.two[2]+r7.two[3];
+    if(d>=3)out.push({id:'dormant',score:d>=10?90:60,title:'Wake up your dormant ties',
+      why:`${fmt(d)} ${d===1?'person':'people'} you once had a conversation with have been quiet for a year or more.`,
+      steps:['Pick 5 of them this week, starting with the ones you remember best.','Send a short, specific note: what reminded you of them, what you’ve been up to. No ask.','Repeat with 5 more next month.'],
+      effort:'About 20 minutes a week',
+      weak:'Dormant ties are weak ties with history. They know and trust you, but they now move in different circles, so they’re a rich source of fresh information with little awkwardness.'});
+  }
+  // 2. Say hello to new connections
+  if(r7&&r7.newYear>=10&&r7.newYearNever/r7.newYear>=0.4){
+    out.push({id:'hello',score:85,title:'Say hello to your new connections',
+      why:`${fmt(r7.newYearNever)} of the ${fmt(r7.newYear)} people you connected with in the last year have never exchanged a message with you.`,
+      steps:['Message 3 new connections this week, ideally within a few days of connecting.','Mention why you accepted or what you have in common, and ask one easy question.','Skip pitches. A line of context beats a paragraph.'],
+      effort:'About 10 minutes, twice a week',
+      weak:'Every new connection starts as a weak tie. A short hello is what turns an acquaintance into someone who thinks of you.'});
+  }
+  // 3. Initiate more
+  if(r6&&r6.inAll[0]>=20){
+    const inn=r6.inAll[0],outn=r6.outAll[0],ratio=outn?inn/outn:inn;
+    if(ratio>=6){
+      const rate=outn?Math.round(100*r6.outAll[1]/outn):null;
+      out.push({id:'initiate',score:rate!=null&&rate>=50?80:65,title:'Reach out first, on purpose',
+        why:`${fmt(inn)} people asked to connect with you in six months, and you asked ${fmt(outn)}.${rate!=null?` ${rate}% of your own requests were accepted.`:''}`,
+        steps:['Each month, send 3 personalized requests to people you admire but don’t know yet.','Aim outside your usual circle: a different employer, industry or country.','Add a one-line note saying why you want to connect.'],
+        effort:'About 15 minutes a month',
+        weak:'Choosing who to connect with, instead of only accepting, is how you build weak ties that reach beyond your current circle.'});
+    }
+  }
+  // 4. Posting
+  if(r4){
+    const p12=r4.posts.slice(-12).reduce((a,b)=>a+b,0);
+    const a=r4.postMonths.mean,b=r4.noPostMonths.mean;
+    if(a>=1.3*b&&b>0)out.push({id:'post',score:p12<=6?75:50,title:'Post a little more consistently',
+      why:`In months when you post you add ${a.toFixed(1)} new connections, against ${b.toFixed(1)} in other months. You posted ${p12} time${p12===1?'':'s'} in the last 12 months.`,
+      steps:['Aim for one post a month for three months.','Share something you learned or a small win, not an announcement.','Count your new connections after three months and compare.'],
+      effort:'About an hour a month',
+      weak:'A post reaches the weak ties who never message you. That quiet audience is where much of its value comes from.'});
+    else out.push({id:'posttest',score:55,title:'Test whether posting helps you',
+      why:`Your history shows only a weak link between posting and growth (r = ${r4.win.r.toFixed(2)}), and you posted ${p12} time${p12===1?'':'s'} in the last 12 months.`,
+      steps:['Post once a month for three months, on a topic you actually know.','Note new connections and replies each month.','Keep going only if you see a difference.'],
+      effort:'About an hour a month',
+      weak:'Posts are one of the few ways to be seen by weak ties without writing to each of them.'});
+  }
+  // 5. Diversify
+  if(r1&&r1.top&&r1.top.length>=4){
+    const tot=r1.top.reduce((a,t)=>a+t.count,0),t3=r1.top.slice(0,3).reduce((a,t)=>a+t.count,0),share=Math.round(100*t3/tot);
+    if(share>=55)out.push({id:'diversify',score:60,title:'Build a bridge to a new cluster',
+      why:`${share}% of your classified connections sit in just three industries: ${r1.top.slice(0,3).map(t=>esc(t.name)).join(', ')}.`,
+      steps:['Pick one industry or role outside those three that you’re curious about.','Connect with 5 people there and follow 3 organizations.','Look for people who work between your world and theirs.'],
+      effort:'About an hour in total',
+      weak:'New ideas travel across the gaps between groups. People who bridge two clusters give you information your own circle does not have.'});
+  }
+  // 6. Accept faster
+  if(r6&&r6.lag.n>=10&&r6.lag.later/r6.lag.n>=0.35){
+    out.push({id:'accept',score:55,title:'Answer connection requests weekly',
+      why:`${r6.lag.later} of the ${r6.lag.n} requests you accepted waited more than two weeks (median wait ${r6.lag.median} days).`,
+      steps:['Set one weekly 10-minute slot for new requests.','Accept the ones that fit, let the rest go, and send a one-line reply to the best few.'],
+      effort:'About 10 minutes a week',
+      weak:'Accepting promptly is the first moment a weak tie forms. A quick yes with a short note starts the relationship warm.'});
+  }
+  // 6b. Turn follows into introductions
+  if(res.sf&&res.sf.without>=10){
+    out.push({id:'followwarm',score:70,title:'Turn your follows into introductions',
+      why:`You follow ${fmt(res.sf.without)} organizations where you don\u2019t yet know anyone.`,
+      steps:['Pick the 3 that matter most to you.','Find one person at each, ideally through a mutual connection, and send a short, curious note.','Ask for 15 minutes of their time, not for a job.'],
+      effort:'About 30 minutes a month',
+      weak:'Following shows you care about an organization. One conversation with someone there turns that interest into a real tie, and it is a tie outside your usual circle.'});
+  }
+  // 6c. Teach LinkedIn what you care about
+  if(res.sm&&(res.sm.accuracy<=40||res.sm.unknownN>=2)){
+    const m=res.sm;
+    out.push({id:'keywords',score:68,title:'Teach LinkedIn what you care about',
+      why:`${100-m.echoPct}% of the ${fmt(m.nTags)} interests LinkedIn assigns you show no trace in your skills, titles, posts or follows${m.unknownN?`, and ${m.unknownN} of your own most-used topic words (like ${m.unknown.slice(0,2).map(u=>'\u201C'+esc(u.term)+'\u201D').join(' and ')}) are missing from what it has on file`:''}.`,
+      steps:['Work your missing topic words into your headline, About section and skills.','Review the interests LinkedIn has assigned you in its privacy and advertising settings, and remove the ones that aren\u2019t you.','Follow and post about the topics you want to be known for.'],
+      effort:'About 30 minutes',
+      weak:'Keywords decide who finds you. Recruiters and distant contacts reach you through search, so the words on your profile are how weak ties discover you.'});
+  }
+  // 7. Keep the core warm
+  if(r7&&r7.pyramid[4]<=40){
+    out.push({id:'core',score:40,title:'Keep your close circle warm',
+      why:`${fmt(r7.pyramid[4])} ${r7.pyramid[4]===1?'person is':'people are'} in your active circle (conversations in the last 90 days).`,
+      steps:['Name the 10 people who matter most to you this year.','Put a recurring monthly coffee or call on the calendar with 3 of them.'],
+      effort:'About an hour a month',
+      weak:'Close ties give support and trust, and weak ties give reach. You need both, so don’t let the core go quiet.'});
+  }
+  return out.sort((a,b)=>b.score-a.score);
+}
+
+function tiers(res){
+  const r=res.s07;if(!r)return null;
+  const p=r.pyramid,total=p[0],close=p[3],dormant=Math.max(0,p[2]-p[3]),weak=Math.max(0,total-p[2]);
+  return {total,close,dormant,weak,n:[close,dormant,weak]};
+}
+
+function build(res){
+  const all=rules(res);
+  return {picks:all.slice(0,3),more:all.slice(3),tiers:tiers(res)};
+}
+function recHtml(r,i){
+  return `<div class="rec"><div class="rec-n">${i}</div><div class="rec-b">
+   <h3>${r.title}</h3>
+   <p class="rec-why"><b>Your data:</b> ${r.why}</p>
+   <ol>${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+   <div class="rec-meta"><span class="chip g">${r.effort}</span></div>
+   <p class="rec-weak"><span class="wkb">Weak ties</span> ${r.weak}</p></div></div>`;
+}
+function section(num,data,opts){
+  opts=opts||{};
+  const t=data.tiers;
+  const strip=t?`<div class="wk-strip">
+    <div class="wk-bar"><i style="flex:${Math.max(t.close,1)};background:var(--blue)"></i><i style="flex:${Math.max(t.dormant,1)};background:var(--gold)"></i><i style="flex:${Math.max(t.weak,1)};background:var(--soft2,var(--beige))"></i></div>
+    <div class="wk-legend"><div><b>${fmt(t.close)}</b><span>Close ties</span><small>conversations in the last year</small></div><div><b>${fmt(t.dormant)}</b><span>Dormant ties</span><small>you had a conversation, but not lately</small></div><div><b>${fmt(t.weak)}</b><span>Weak ties</span><small>connected, with little or no conversation</small></div></div></div>`:'';
+  const aiLink=opts.report?'':`<div class="rec-ai"><b>Want a plan with names?</b> The starter kit in the next section includes private prompts that build your reconnection list, a weak-ties map and drafts of hello messages, all on your own computer. <a href="#s-ai">Go to the starter kit</a></div>`;
+  return `<section class="sec rc" id="s-recs"><div class="sh"><span class="num">${num}</span><div><h2>${data.picks.length===1?'One move':'Three moves'} to strengthen your network</h2><p class="sub">Picked from your own numbers above. Each one is built around weak ties: the acquaintances and old contacts who connect you to people and information you don’t already have.</p></div></div>
+   <div class="wk-box"><h3>Why weak ties?</h3><p>In 1973 the sociologist Mark Granovetter found that people more often hear about jobs and ideas from acquaintances than from close friends, because close friends know the same things you do. A 2022 experiment on about 20 million LinkedIn users reached a similar answer: moderately weak ties, neither the closest nor the most distant, were the most helpful for finding jobs.</p>${strip}</div>
+   <div class="recs">${data.picks.map((r,i)=>recHtml(r,i+1)).join('')}</div>
+   ${data.more.length?`<details class="more" id="m-s-recs"><summary>More ideas</summary><div class="mb"><div class="recs">${data.more.map((r,i)=>recHtml(r,data.picks.length+i+1)).join('')}</div></div></details>`:''}
+   ${aiLink}
+   <p class="src">These suggestions come from simple rules applied to your numbers. They are ideas worth trying, not predictions. Weak-tie research: Granovetter, <i>The Strength of Weak Ties</i> (1973); Rajkumar et al., <i>A causal test of the strength of weak ties</i>, Science (2022).</p></section>`;
+}
+root.LDV.recs={build,section};
+})();
+
+</script>
+<script id="src-lib-render">
+(function(){
+const root=window;root.LDV=root.LDV||{};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pc=(a,b)=>b?Math.round(100*a/b):0;
+const charts=[];const lazyReg={};
+let sims=[];
+function C(){return root.LDV.style.C()}
+function fnt(w,s){return {family:C().font,weight:w||600,...(s?{size:s}:{})}}
+function wrap(s,n){n=n||16;const w=s.split(' '),L=[];let c='';w.forEach(x=>{if((c+' '+x).trim().length>n){L.push(c.trim());c=x}else c=(c+' '+x)});L.push(c.trim());return L}
+function chart(id,cfg){const el=$(id);if(!el)return null;const ex=Chart.getChart(el);if(ex)ex.destroy();const c=new Chart(el,cfg);charts.push(c);return c}
+function lazy(id,fn){lazyReg[id]={fn,done:false};const d=$(id);if(d&&d.open){lazyReg[id].done=true;fn()}}
+function bindToggles(){document.querySelectorAll('details.more').forEach(d=>{if(d._b)return;d._b=1;d.addEventListener('toggle',()=>{const r=lazyReg[d.id];if(d.open&&r&&!r.done){r.done=true;r.fn()}})})}
+function monthLabel(m,o){return new Date(m+'-15T12:00:00Z').toLocaleDateString('en-US',Object.assign({month:'short',timeZone:'UTC'},o||{}))}
+function fmtDay(d){return new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})}
+function sec(o){
+  const cards=o.cards.map(c=>`<div class="hc ${c[0]}"><b>${c[1]}</b><span>${c[2]}</span></div>`).join('');
+  return `<section class="sec" id="${o.id}"><div class="sh"><span class="num">${o.num}</span><div><h2>${o.title}</h2><p class="sub">${o.sub}</p></div></div>
+  <div class="cards3">${cards}</div>${o.hero}
+  ${o.more?`<details class="more" id="m-${o.id}"><summary>More detail</summary><div class="mb">${o.more}</div></details>`:''}
+  <div class="take"><b>Takeaway.</b> ${o.take}</div><p class="src">${o.src}</p></section>`;
+}
+const card=(title,inner,note)=>`<div class="card"><h3>${title}</h3>${inner}${note?`<p class="note">${note}</p>`:''}</div>`;
+
+/* ===== 01 ===== */
+function s01(r,num){
+  const big=r.top.slice(0,3).map(t=>t.name).join(', ').replace(/, ([^,]*)$/,' and $1');
+  const emp=r.biggestEmployer;
+  const html=sec({id:'s-net',num,title:'Your network as a universe',sub:`${r.total} connections, grouped by industry and by employer, with you at the center.`,
+   cards:[['a',r.total.toLocaleString(),'connections'],['b',r.top.length,`industry clusters, covering ${r.classified} people`],['c',r.employers.length,`employers with ${r.thr}+ connections`]],
+   hero:card('Industries and employers &middot; drag to rearrange, hover for details',`<svg class="net" id="net-svg"></svg><div class="tip" id="net-tip"></div><div class="lg" id="net-lg"></div>`,'Drag any circle to move it; it stays where you drop it. Double-click a circle to let it settle back.'),
+   more:`<div class="card"><h3>When each cluster was built</h3><canvas id="net-yr" height="150"></canvas><p class="note">New connections per year, colored by industry cluster, matching the map above.</p></div><div class="card"><h3>How new is each cluster?</h3><canvas id="net-fresh" height="${Math.max(120,r.fresh.length*26)}"></canvas><p class="note">Share of each cluster&rsquo;s connections added since ${r.recentFrom}. A high bar means a cluster you are building now; a low bar means an older, settled one.</p></div>`,
+   take:`Your biggest industries are ${big}. ${(()=>{const f=r.fresh.filter(x=>x.count>=10).sort((a,b)=>b.recentPct-a.recentPct),n=f[0],o=f[f.length-1];return f.length>1&&n.recentPct-o.recentPct>=10?`${esc(n.name)} is your newest cluster (${n.recentPct}% added since ${r.recentFrom}) and ${esc(o.name)} your most settled (${o.recentPct}%). `:''})()}${emp?`${esc(emp[0])} is your largest single employer with ${emp[1]} connections. `:''}Your network spans about ${r.distinct.toLocaleString()} different employers.`,
+   src:`Source: Connections.csv. Industry is not in LinkedIn's export, so it is inferred from company names and job titles with keyword rules. ${r.unclassified} connections could not be classified and are left out of the map.`});
+  const init=()=>{
+    const P=C();const COL=P.cat.concat(P.cat);
+    $('net-lg').innerHTML=r.top.map((t,i)=>`<span><i style="background:${COL[i]}"></i>${esc(t.name)} (${t.count})</span>`).join('');
+    const W=900,H=680,svg=d3.select('#net-svg');svg.selectAll('*').remove();svg.attr('viewBox',`0 0 ${W} ${H}`);const g=svg.append('g');
+    const n=r.top.length,ORDER=[];for(let k=0;k<n;k++)ORDER.push(k%2===0?k/2:Math.ceil(n/2)+(k-1)/2);
+    const POS=[];ORDER.forEach((ind,k)=>{const a=-Math.PI/2+k/n*2*Math.PI;POS[ind]=[W/2+Math.cos(a)*300,H/2+Math.sin(a)*230]});
+    const out=i=>{const dx=POS[i][0]-W/2,dy=POS[i][1]-H/2,l=Math.hypot(dx,dy)||1;return [POS[i][0]+dx/l*95,POS[i][1]+dy/l*95]};
+    const nodes=[{id:'ME',k:'me',r:38,fx:W/2,fy:H/2,label:'You'}],links=[];
+    r.top.forEach((t,i)=>{nodes.push({id:'I'+i,k:'ind',i,r:10+Math.sqrt(t.count)*3.4,label:t.name,count:t.count});links.push({source:'ME',target:'I'+i,s:200,me:1})});
+    r.employers.forEach((e,j)=>{nodes.push({id:'E'+j,k:'co',i:e.ind,r:4+Math.sqrt(e.count)*2.6,label:e.name,count:e.count});links.push({source:'I'+e.ind,target:'E'+j,s:90})});
+    const sim=d3.forceSimulation(nodes).force('link',d3.forceLink(links).id(d=>d.id).distance(d=>d.s).strength(d=>d.me?.15:.9)).force('charge',d3.forceManyBody().strength(-120))
+      .force('x',d3.forceX(d=>d.k=='me'?W/2:d.k=='co'?out(d.i)[0]+(nodes[1+d.i].fx!=null?nodes[1+d.i].fx-POS[d.i][0]:0):POS[d.i][0]).strength(.35)).force('y',d3.forceY(d=>d.k=='me'?H/2:d.k=='co'?out(d.i)[1]+(nodes[1+d.i].fy!=null?nodes[1+d.i].fy-POS[d.i][1]:0):POS[d.i][1]).strength(.35)).force('collide',d3.forceCollide(d=>d.r+(d.k=='co'?20:10)));
+    sims.push(sim);
+    const link=g.append('g').selectAll('line').data(links).join('line').attr('stroke',d=>d.me?P.ink:P.grey).attr('stroke-opacity',d=>d.me?.5:.35).attr('stroke-width',d=>d.me?2.5:1);
+    const tip=d3.select('#net-tip');
+    const node=g.append('g').selectAll('circle').data(nodes).join('circle').attr('r',d=>d.r).attr('fill',d=>d.k=='me'?P.ink:COL[d.i]).attr('stroke','#fff').attr('stroke-width',d=>d.k=='ind'||d.k=='me'?3:1.5)
+     .on('mousemove',(e,d)=>{const b=$('net-svg').closest('.card').getBoundingClientRect();tip.style('opacity',1).style('left',(e.clientX-b.left+12)+'px').style('top',(e.clientY-b.top+12)+'px').html(d.k=='me'?`<b>You</b><br>${r.total} connections`:`<b>${esc(d.label)}</b><br>${d.count} connections`)})
+     .on('mouseleave',()=>tip.style('opacity',0))
+     .style('cursor',d=>d.k=='me'?'default':'grab')
+     .on('dblclick',(e,d)=>{if(d.k=='me')return;d.fx=d.fy=null;sim.alpha(.6).restart()})
+     .call(d3.drag().filter(e=>!e.button).on('start',(e,d)=>{if(d.k=='me')return;if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y}).on('drag',(e,d)=>{if(d.k=='me')return;d.fx=e.x;d.fy=e.y}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0)}));
+    const lab=g.append('g').selectAll('text').data(nodes.filter(d=>d.k!='co'||d.count>=Math.max(3,r.thr))).join('text').text(d=>d.label).attr('text-anchor','middle').attr('font-weight',800).attr('font-size',d=>d.k=='me'?18:d.k=='ind'?13:9).attr('fill',d=>d.k=='me'?P.gold:P.ink).attr('paint-order','stroke').attr('stroke',d=>d.k=='me'?'none':'#faf8f1').attr('stroke-width',3).style('pointer-events','none');
+    sim.on('tick',()=>{nodes.forEach(d=>{d.x=Math.max(d.r+70,Math.min(W-d.r-70,d.x));d.y=Math.max(d.r+30,Math.min(H-d.r-20,d.y))});
+      link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);node.attr('cx',d=>d.x).attr('cy',d=>d.y);
+      lab.attr('x',d=>d.x).attr('y',d=>d.k=='me'?d.y+6:d.k=='ind'?(POS[d.i][1]>H/2+20?d.y-d.r-8:d.y+d.r+16):d.y-d.r-4)});
+    lazy('m-s-net',()=>{
+      chart('net-yr',{type:'bar',data:{labels:r.years,datasets:r.top.map((t,k)=>({label:t.name,data:r.perInd[k],backgroundColor:COL[k],borderWidth:0}))},options:{plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:12}},y:{stacked:true,grid:{color:'#eee'},title:{display:true,text:'New connections',font:fnt()}}}}});
+      chart('net-fresh',{type:'bar',data:{labels:r.fresh.map(f=>wrap(f.name,22)),datasets:[{data:r.fresh.map(f=>f.recentPct),backgroundColor:r.fresh.map((_,k)=>COL[k]),borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x}% added since ${r.recentFrom} (${r.fresh[c.dataIndex].recent} of ${r.fresh[c.dataIndex].count})`}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#eee'}},y:{grid:{display:false},ticks:{autoSkip:false,font:fnt(600,11)}}}}});
+    });
+  };
+  return {html,init};
+}
+
+/* ===== posting ===== */
+function s04(r,num){
+  const strength=Math.abs(r.win.r)<.2?'weak or no':Math.abs(r.win.r)<.5?'a moderate':'a strong';
+  const lagTxt=`LinkedIn keeps showing a post for weeks, so this score counts new connections in the month you posted and the month after.`;
+  const common=r.win.r>=.2?`That fits a common claim that posting more brings more connections: <a href="https://buffer.com/resources/how-often-to-post-on-linkedin/" target="_blank" rel="noopener">Buffer&rsquo;s analysis of over 2 million LinkedIn posts</a> found that accounts that post more often tend to get more reach and followers. Your own history can&rsquo;t prove cause, though, because busy months for posting may also be busy months for everything else.`:`The common advice that posting more brings more connections (Buffer&rsquo;s analysis of <a href="https://buffer.com/resources/how-often-to-post-on-linkedin/" target="_blank" rel="noopener">over 2 million LinkedIn posts</a> points that way) shows up only weakly in your own history.`;
+  const fp=p=>p<0.001?'< 0.001':p.toFixed(3);
+  const html=sec({id:'s-post',num,title:'Does posting actually work?',sub:`Posts and new connections by month, ${monthLabel(r.months[0],{month:'long',year:'numeric'})} to ${monthLabel(r.months[r.months.length-1],{month:'long',year:'numeric'})}.`,
+   cards:[['c','r = '+r.win.r.toFixed(2),'link between posts and new connections in the month of the post plus the month after'],['a',`${r.postMonths.mean} vs ${r.noPostMonths.mean}`,'average new connections in months with a post vs. months without'],['b',r.totalPosts,'posts in total, across '+r.months.length+' months']],
+   hero:card('New connections (bars) and posts (dots) by month',`<canvas id="post-tl" height="130"></canvas>`,'Red dots mark months with at least one post; a bigger dot means more posts that month.'),
+   more:`<div class="two"><div class="card"><h3>Average new connections by posts in the month</h3><canvas id="post-grp" height="230"></canvas><p class="note" id="post-gn"></p></div><div class="card"><h3>Correlation checks</h3><table class="t" id="post-tbl"></table></div></div>`,
+   take:`There is ${strength} link: posting explains about ${Math.round(r.r2*100)}% of the swings in new connections. ${lagTxt} ${common}`,
+   src:`Sources: Shares.csv, Connections.csv. LinkedIn\u2019s export does not include how many reactions or comments your posts received, so this compares posting with connections only. Only current connections are counted, so older months are slightly understated. Significance comes from a shuffle test, because both series are sparse counts.`});
+  const init=()=>{
+    const P=C();
+    chart('post-tl',{data:{labels:r.months,datasets:[{type:'bar',label:'New connections',data:r.conns,backgroundColor:P.blue,yAxisID:'y',order:2,barPercentage:1,categoryPercentage:1},{type:'line',label:'Months with posts',data:r.posts.map(v=>v>0?v:null),showLine:false,backgroundColor:P.red,borderColor:P.red,pointBackgroundColor:P.red,pointBorderColor:'#ffffff',pointBorderWidth:2,pointStyle:'circle',pointRadius:r.posts.map(v=>v?5+Math.min(v,4)*2:0),yAxisID:'y2',order:1}]},
+      options:{interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{font:fnt(600),usePointStyle:true,pointStyle:'rectRounded'}}},scales:{x:{ticks:{maxTicksLimit:15,callback:function(v){return this.getLabelForValue(v).slice(0,4)}},grid:{display:false}},y:{title:{display:true,text:'New connections',font:fnt()},grid:{color:'#eee'}},y2:{position:'right',min:0,max:Math.max(4,Math.max(...r.posts)+1),title:{display:true,text:'Posts',font:fnt()},grid:{display:false},ticks:{stepSize:1}}}}});
+    lazy('m-s-post',()=>{
+      const G=Object.entries(r.groups);
+      chart('post-grp',{type:'bar',data:{labels:G.map(([k])=>k==='3'?'3+ posts':k==='1'?'1 post':k+' posts'),datasets:[{data:G.map(([,v])=>v.mean),backgroundColor:[P.grey,P.red,P.red,P.red],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y} avg new connections (${G[c.dataIndex][1].n} months)`}}},scales:{y:{grid:{color:'#eee'},title:{display:true,text:'Avg new connections',font:fnt()}},x:{grid:{display:false},ticks:{font:fnt()}}}}});
+      $('post-gn').textContent='Months in each group: '+G.map(([k,v])=>`${k}${k==='3'?'+':''} post${k==='1'?'':'s'}: ${v.n}`).join(', ')+'.';
+      const R=[['Month of post + next month (the score above)',r.win],['Same month only, all months',r.full],r.since2020?['Same month, 2020 onward',r.since2020]:null,['Posts this month → connections next month',r.lag1],['Connections this month → posts next month',r.rev]].filter(Boolean);
+      $('post-tbl').innerHTML=`<tr><th>Test</th><th class="n">r</th><th class="n">p</th></tr>`+R.map(([t,s])=>`<tr><td>${t}</td><td class="n">${s.r.toFixed(2)}</td><td class="n">${fp(s.p)}</td></tr>`).join('');
+    });
+  };
+  return {html,init};
+}
+
+/* ===== invitations ===== */
+function s06(r,num){
+  const inR=pc(r.inAll[1],r.inAll[0]),outR=r.outAll[0]?pc(r.outAll[1],r.outAll[0]):null;
+  const ratio=r.outAll[0]?Math.round(r.inAll[0]/r.outAll[0]):null;
+  const html=sec({id:'s-inv',num,title:'Inbound vs. outbound connections',sub:`${fmtDay(r.start)} to ${fmtDay(r.end)}, the last six months of the export.`,
+   cards:[['a',ratio?`~${ratio}×`:r.inAll[0],ratio?`more people asked to connect with you (${r.inAll[0]}) than you asked (${r.outAll[0]})`:`people asked to connect with you; you sent ${r.outAll[0]}`],['b',inR+'%',`of inbound requests you accepted (${r.inAll[1]} of ${r.inAll[0]})`],['d',outR==null?'n/a':outR+'%',outR==null?'you sent no requests in this window':`of your own requests were accepted (${r.outAll[1]} of ${r.outAll[0]})`]],
+   hero:card('Requests per month, with the share you accepted',`<canvas id="inv-tr" height="130"></canvas>`,'Bars count invitations by the month they were sent. The line is the share of that month’s inbound requests you accepted. Recent months can still rise.'),
+   more:`<div class="two"><div class="card"><h3>How long you took to accept</h3><canvas id="inv-lag" height="200"></canvas><p class="note" id="inv-ln"></p></div><div class="card"><h3>Acceptance rate</h3><canvas id="inv-rate" height="200"></canvas></div></div>`,
+   take:`${ratio&&ratio>=3?'Your network is mostly pull, not push: people find you far more often than you chase them. ':''}You accepted ${inR}% of inbound requests${r.lag.n?`, with a median wait of ${r.lag.median} days${r.lag.later>r.lag.n/3?`. ${r.lag.later} of the ${r.lag.n} you accepted waited more than two weeks, which suggests you accept in bursts${r.batch&&r.batch[1]>=5?` (${r.batch[1]} on a single day, ${fmtDay(r.batch[0])})`:''}`:''}`:''}.`,
+   src:`Source: Invitations.csv. A request counts as accepted when the person appears in Connections.csv. The file only lists requests that are recent or pending, so requests that were ignored or withdrawn may not be recorded, which can overstate your own acceptance rate.`});
+  const init=()=>{
+    const P=C();const rate=r.inTot.map((t,i)=>t?Math.round(100*r.inAcc[i]/t):null);
+    chart('inv-tr',{data:{labels:r.months.map(m=>monthLabel(m)),datasets:[{type:'bar',label:'Received',data:r.inTot,backgroundColor:P.blue,yAxisID:'y'},{type:'bar',label:'Sent by you',data:r.outTot,backgroundColor:P.gold,yAxisID:'y'},{type:'line',label:'% of received you accepted',data:rate,borderColor:P.red,backgroundColor:P.red,borderWidth:3,pointRadius:5,tension:.25,yAxisID:'y2'}]},options:{plugins:{legend:{labels:{font:fnt(600)}}},scales:{y:{beginAtZero:true,title:{display:true,text:'Requests',font:fnt()},grid:{color:'#eee'}},y2:{position:'right',min:0,max:100,title:{display:true,text:'% accepted',font:fnt()},grid:{display:false},ticks:{callback:v=>v+'%'}},x:{grid:{display:false},ticks:{font:fnt()}}}}});
+    lazy('m-s-inv',()=>{
+      chart('inv-lag',{type:'bar',data:{labels:['Within 3 days','4–14 days','More than 2 weeks'],datasets:[{data:[r.lag.within3,r.lag.within14,r.lag.later],backgroundColor:[P.blue,P.gold,P.red],borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eee'},title:{display:true,text:'Accepted requests',font:fnt()}},x:{grid:{display:false},ticks:{font:fnt()}}}}});
+      $('inv-ln').textContent=`Median wait: ${r.lag.median} days.`+(r.batch?` ${r.batch[1]} requests were accepted on ${fmtDay(r.batch[0])}.`:'');
+      chart('inv-rate',{type:'bar',data:{labels:['Your requests accepted','Inbound you accepted'],datasets:[{data:[outR==null?0:outR,inR],backgroundColor:[P.gold,P.blue],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#eee'}},x:{grid:{display:false},ticks:{font:fnt()}}}}});
+    });
+  };
+  return {html,init};
+}
+
+/* ===== relationships ===== */
+function s07(r,num){
+  const p=r.pyramid,pt=a=>pc(a,r.total);
+  const html=sec({id:'s-rel',num,title:'Connections vs. conversations',sub:'Every connection, sorted by when you last exchanged a LinkedIn message.',
+   cards:[['a',pt(p[1])+'%',`Connecting: have ever exchanged a message with you (${p[1].toLocaleString()} of ${r.total.toLocaleString()})`],['b',pt(p[2])+'%',`Conversing: have ever had a back-and-forth conversation with you (${p[2]})`],['c',p[3],`conversations in the last year. Your working network is closer to ${p[3]} than ${r.total.toLocaleString()}.`]],
+   hero:card('Collecting, connecting, conversing',`<div class="lvl"><div><h4>Collecting</h4><b>${r.total.toLocaleString()}</b><span>connections on your list</span></div><div><h4>Connecting</h4><b>${p[1].toLocaleString()}</b><span>have exchanged at least one message with you</span></div><div><h4>Conversing</h4><b>${p[2].toLocaleString()}</b><span>have gone back and forth with you</span></div></div><div class="tiers" id="rel-tiers"></div>`,'The five tiers split everyone by how recently you last exchanged a message. A conversation means both of you have written at least once.'),
+   more:`<div class="card"><h3>Each tier, by who did the talking</h3><canvas id="rel-stack" height="150"></canvas><p class="note">The never-messaged connections are left off. A conversation means both of you have sent a message at some point.</p></div><div class="two"><div class="card"><h3>From all names to live relationships</h3><canvas id="rel-fun" height="230"></canvas></div><div class="card"><h3>Connections added each year, by whether you ever messaged</h3><canvas id="rel-yr" height="230"></canvas></div></div>`,
+   take:`You have collected ${r.total.toLocaleString()} connections, connected with ${p[1].toLocaleString()} (${pt(p[1])}%) and conversed with ${p[2].toLocaleString()} (${pt(p[2])}%). ${r.two[3]?`The biggest opportunity may be the dormant group: you once had a conversation with ${r.two[3]} of the ${r.counts[3]} dormant connections. `:''}${r.oneWayDormant?`Another ${r.oneWayDormant} connections wrote to you once and never got a reply. `:''}Collecting hasn't slowed: ${r.newYearNever} of the ${r.newYear} people you connected with in the last year have never messaged you.`,
+   src:`Source: Connections.csv and messages.csv, matched by profile URL. Only message dates and senders are used; message text is never read. Tiers: Active = last message within 90 days; Some contact = 91 days to a year; Going stale = 1 to 2 years; Dormant = over 2 years. This counts LinkedIn messages only, so coworkers and friends you talk to elsewhere will look like strangers.`});
+  const init=()=>{
+    const P=C();const col=[P.blue,P.gold,P.grey,P.red,root.LDV.style.mix(P.soft,P.ink,.12)];
+    const onc=c=>{const h=c.replace('#','');const v=[0,2,4].map(i=>parseInt(h.substr(i,2),16));return (0.299*v[0]+0.587*v[1]+0.114*v[2])>150?P.ink:'#ffffff'};
+    $('rel-tiers').innerHTML=r.cats.map((c,i)=>`<div class="tr" style="background:${col[i]};color:${onc(col[i])}"><b>${r.counts[i]}</b><span>${c}</span><small>${pt(r.counts[i])}% of connections${r.two[i]?` · ${r.two[i]} in conversation`:''}</small></div>`).join('');
+    lazy('m-s-rel',()=>{
+      chart('rel-stack',{type:'bar',data:{labels:r.cats.slice(0,4),datasets:[{label:'Conversation (both wrote)',data:r.two.slice(0,4),backgroundColor:P.blue},{label:'Only they wrote',data:r.theirs.slice(0,4),backgroundColor:P.gold},{label:'Only you wrote',data:r.mine.slice(0,4),backgroundColor:P.red}]},options:{indexAxis:'y',plugins:{legend:{labels:{font:fnt(600)}}},scales:{x:{stacked:true,grid:{color:'#eee'}},y:{stacked:true,grid:{display:false},ticks:{font:fnt()}}}}});
+      chart('rel-fun',{type:'bar',data:{labels:[['Collecting:','all connections'],['Connecting:','ever messaged'],['Conversing:','ever'],['Conversing,','last year'],['Conversing,','last 90 days']],datasets:[{data:p,backgroundColor:[P.soft,P.grey,P.gold,P.blue,P.red],borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x} (${pc(c.parsed.x,r.total)}%)`}}},scales:{x:{grid:{color:'#eee'}},y:{grid:{display:false},ticks:{autoSkip:false,font:fnt()}}}}});
+      chart('rel-yr',{type:'bar',data:{labels:r.years,datasets:[{label:'Messaged',data:r.yrMsg,backgroundColor:P.blue},{label:'Never messaged',data:r.yrNever,backgroundColor:P.soft}]},options:{plugins:{legend:{labels:{font:fnt(600)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:11}},y:{stacked:true,grid:{color:'#eee'}}}}});
+    });
+  };
+  return {html,init};
+}
+
+/* ===== timeline ===== */
+function s08(r,num){
+  const known=r.known>=r.n/2;
+  const html=sec({id:'s-time',num,title:'Connection timeline',sub:`The ${r.n} people you connected with from ${fmtDay(r.start)} to ${fmtDay(r.end)}, anonymized.`,
+   cards:[['a',r.n,'connections added'],['b',known?pc(r.theyAsked,r.known)+'%':'n/a',known?`asked you first (${r.theyAsked} of ${r.known})`:'who asked first is not in the export for most of these'],['c',pc(r.messaged,r.n)+'%',`have exchanged a message since connecting (${r.messaged} of ${r.n})`]],
+   hero:card('Connected date vs. messages exchanged since',`<svg class="net" id="tl-svg"></svg><div class="tip" id="tl-tip"></div><div class="lg"><span><i style="background:var(--blue)"></i>They asked to connect</span><span><i style="background:var(--gold)"></i>You asked</span><span><i style="background:var(--grey)"></i>Unknown</span><span class="muted">Dot size grows with messages. Hover for details.</span></div>`),
+   more:`<div id="tl-list"></div>`,
+   take:`${known?`Most people who joined asked first (${r.theyAsked} of ${r.known}). `:''}${r.n-r.messaged} of ${r.n} have no message since connecting${r.twoWay?`, and only ${r.twoWay} have gone back and forth`:''}. Stacks of dots on a single day usually mean you accepted a backlog of requests in one sitting.`,
+   src:`Sources: Connections.csv, Invitations.csv, messages.csv. People are numbered, never named. Messages are counted on or after the connected date, in both directions. Notes inside an invitation, email and in-person contact are not counted.`});
+  const init=()=>{
+    const P=C(),D=r.rows;const W=1000,H=400,m={l:56,r:24,t:20,b:44};
+    const svg=d3.select('#tl-svg');svg.selectAll('*').remove();svg.attr('viewBox',`0 0 ${W} ${H}`).style('background','var(--tint)');
+    const t0=new Date(r.start+'T00:00:00Z'),t1=new Date(+new Date(r.end+'T00:00:00Z')+4*864e5);
+    const x=d3.scaleTime().domain([t0,t1]).range([m.l,W-m.r]);const ymax=Math.max(4,d3.max(D,d=>d.total));const y=d3.scaleLinear().domain([0,ymax]).range([H-m.b,m.t]);
+    svg.append('g').attr('transform',`translate(0,${H-m.b})`).call(d3.axisBottom(x).ticks(d3.utcMonth.every(1)).tickFormat(d3.utcFormat('%b')).tickSizeOuter(0)).call(g=>g.selectAll('text').attr('class','ax'));
+    svg.append('g').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(Math.min(ymax,7)).tickSizeInner(-(W-m.l-m.r)).tickSizeOuter(0)).call(g=>{g.selectAll('line').attr('stroke','#e6e1d1');g.selectAll('text').attr('class','ax');g.select('.domain').remove()});
+    svg.append('text').attr('transform','rotate(-90)').attr('x',-(H/2)).attr('y',14).attr('text-anchor','middle').attr('class','ax').attr('fill',P.ink).text('Messages exchanged since connecting');
+    const nodes=D.map(d=>({...d,tx:x(new Date(d.date+'T12:00:00Z')),ty:y(d.total),r:4.5+Math.sqrt(d.total)*3.2}));
+    d3.forceSimulation(nodes).force('x',d3.forceX(d=>d.tx).strength(1)).force('y',d3.forceY(d=>d.ty).strength(.35)).force('c',d3.forceCollide(d=>d.r+1)).stop().tick(200);
+    const tip=d3.select('#tl-tip');
+    svg.append('g').selectAll('circle').data(nodes).join('circle').attr('cx',d=>d.x).attr('cy',d=>Math.min(H-m.b-d.r,d.y)).attr('r',d=>d.r).attr('fill',d=>d.init==='You'?P.gold:d.init==='Them'?P.blue:P.grey).attr('fill-opacity',.85).attr('stroke','#fff').attr('stroke-width',1.5)
+     .on('mousemove',(e,d)=>{const b=$('tl-svg').closest('.card').getBoundingClientRect();tip.style('opacity',1).style('left',(e.clientX-b.left+12)+'px').style('top',(e.clientY-b.top+12)+'px').html(`<b>Person #${String(d.id).padStart(2,'0')}</b><br>Connected ${fmtDay(d.date)} · ${d.init==='You'?'you asked':d.init==='Them'?'they asked':'initiator unknown'}<br>${d.mine} from you, ${d.theirs} from them`)})
+     .on('mouseleave',()=>tip.style('opacity',0));
+    lazy('m-s-time',()=>{
+      const by={};D.forEach(d=>{(by[d.date.slice(0,7)]=by[d.date.slice(0,7)]||[]).push(d)});
+      $('tl-list').innerHTML=Object.keys(by).sort().reverse().map(k=>`<div class="mo"><span>${monthLabel(k,{month:'long',year:'numeric'})}</span><span>${by[k].length} connected</span></div><div class="lr h"><span>Date</span><span>Person</span><span>Asked</span><span>Messages since</span><span>Last</span></div>`+by[k].map(d=>`<div class="lr"><span>${fmtDay(d.date)}</span><span><b>#${String(d.id).padStart(2,'0')}</b><small>${esc(d.ind.replace('Unclassified','Other / unclassified'))}</small></span><span><span class="pill ${d.init==='You'?'p-lead':'p-intro'}">${d.init==='You'?'You':d.init==='Them'?'Them':'?'}</span></span><span style="font-weight:${d.total?800:600};opacity:${d.total?1:.55}">${d.total?`${d.total} (${d.mine} you, ${d.theirs} them)`:'None'}</span><span>${d.last?fmtDay(d.last):'—'}</span></div>`).join('')).join('');
+    });
+  };
+  return {html,init};
+}
+
+/* ===== career stages ===== */
+function s10(r,num){
+  const fast=r.eras.reduce((a,e)=>e.perYear>a.perYear?e:a),last=r.eras[r.eras.length-1];
+  const html=sec({id:'s-layers',num,title:'Your career, stage by stage',sub:r.hasPositions?'Every connection grouped by the year you made it and the job you held at the time.':'Every connection grouped by the year you made it. (No Positions.csv was found, so stages are grouped by years instead of jobs.)',
+   cards:[['a',r.total.toLocaleString(),'connections today'],['c',r.peakCount,`in your biggest year, ${r.peakYear}`],['b',Math.round(fast.perYear)+'/yr',`pace in your fastest stage: ${esc(fast.name)}`]],
+   hero:card('Network size over time, by career stage',`<div class="lg" id="lay-lg" style="margin:0 0 12px"></div><canvas id="lay-area" height="150"></canvas>`,'Each band is the running total of connections made during that stage. A band stops growing the day the next job begins.'),
+   more:`<div class="two"><div class="card"><h3>New connections per year</h3><canvas id="lay-bars" height="230"></canvas></div><div class="card"><h3>Pace: new connections per year in each stage</h3><canvas id="lay-pace" height="230"></canvas></div></div><div class="eras" id="lay-eras" style="margin-top:18px"></div>`,
+   take:`Your busiest year was ${r.peakYear}, with ${r.peakCount} new connections. The fastest-growing stage was ${esc(fast.name)} at about ${Math.round(fast.perYear)} a year${last&&last!==fast?`, compared with ${Math.round(last.perYear)} a year in your most recent stage`:''}.`,
+   src:`Sources: Connections.csv${r.hasPositions?', Positions.csv':''}. A connection date is when you connected on LinkedIn, not when you met. Only current connections are included, so people who later disconnected are missing and older periods are understated.`});
+  const init=()=>{
+    const P=C();const EC=P.cat.concat(P.cat);
+    $('lay-lg').innerHTML=r.eras.map((e,i)=>`<span><i class="sq" style="background:${EC[i]}"></i>${esc(e.name)}</span>`).join('');
+    const ds=(arr,fill)=>r.eras.map((e,i)=>({label:e.name,data:arr[i],backgroundColor:EC[i],borderColor:EC[i],borderWidth:fill?1:0,fill:fill,pointRadius:0,tension:.25}));
+    chart('lay-area',{type:'line',data:{labels:r.years,datasets:ds(r.cum,true)},options:{interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{footer:items=>'Total: '+items.reduce((a,i)=>a+i.parsed.y,0)}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:11}},y:{stacked:true,title:{display:true,text:'Connections (running total)',font:fnt()},grid:{color:'#eee'}}}}});
+    lazy('m-s-layers',()=>{
+      chart('lay-bars',{type:'bar',data:{labels:r.years,datasets:ds(r.cnt,false)},options:{plugins:{legend:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:11}},y:{stacked:true,grid:{color:'#eee'}}}}});
+      chart('lay-pace',{type:'bar',data:{labels:r.eras.map(e=>wrap(e.name,18)),datasets:[{data:r.eras.map(e=>e.perYear),backgroundColor:EC.slice(0,r.eras.length),borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x+' per year'}}},scales:{x:{grid:{color:'#eee'}},y:{grid:{display:false},ticks:{autoSkip:false,font:fnt(600,10)}}}}});
+      const fm=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',year:'numeric',timeZone:'UTC'});
+      $('lay-eras').innerHTML=r.eras.map((e,i)=>`<div class="e" style="--c:${EC[i]}"><h4>${esc(e.name)}</h4><div class="d">${fm(e.start)} – ${fm(e.end)}${e.sub?' · '+esc(e.sub):''}</div><b>${e.n}</b><small>connections · ${e.perYear}/yr</small></div>`).join('');
+    });
+  };
+  return {html,init};
+}
+
+
+/* ===== mirror: what LinkedIn thinks vs. what you do ===== */
+function sm(r,num){
+  const chips=(arr,cls)=>arr.map(x=>`<span class="chip ${cls||''}">${esc(x)}</span>`).join('');
+  const band=r.fit>=70?'LinkedIn knows you well':r.fit>=40?'LinkedIn knows part of you':'LinkedIn is mostly guessing';
+  const diag=r.accuracy<50&&r.coverage>=70?'It has most of what you say about yourself, but pads your profile with guesses that aren’t you.':r.accuracy>=60&&r.coverage<50?'Its guesses are on target, but it’s missing the topics you care about most.':r.accuracy<50&&r.coverage<50?'It misses much of what you do and adds guesses that aren’t you.':r.accuracy<50?'It catches some of what you do, but adds guesses that aren\u2019t you.':'Its picture of you is broadly on target.';
+  const matched=r.echoedSample.slice(0,8).map(e=>e.tag),none=r.noTrace.slice(0,10);
+  const hero=`<div class="card"><h3>How well does LinkedIn know you?</h3>
+   <div class="fit">
+    <div class="fit-score"><div class="ring" style="--p:${r.fit}"><b>${r.fit}</b></div><div class="fit-band">${band}</div><small>Fit score, out of 100</small></div>
+    <div class="fit-meters">
+     <div class="meter-row"><div class="meter-h"><b>Accuracy</b><span>${r.accuracy}%</span></div><div class="meter"><i style="width:${r.accuracy}%"></i></div><small>Share of LinkedIn’s ${r.nTags} guesses that match what you list, write or follow.</small></div>
+     <div class="meter-row"><div class="meter-h"><b>Coverage</b><span>${r.coverage}%</span></div><div class="meter"><i style="width:${r.coverage}%"></i></div><small>Share of your ${r.topTerms} most-used topic words that LinkedIn has on file.</small></div>
+     <p class="fit-note">${diag}</p>
+    </div>
+   </div>
+   <div class="mirror">
+    <div class="mcol"><h4>What LinkedIn thinks</h4>
+      <div class="ml">Matches your own words</div><div class="chips">${chips(matched,'g')}</div>
+      <div class="ml">No trace in what you do</div><div class="chips">${chips(none,'s')}</div></div>
+    <div class="mcol"><h4>What you show</h4>
+      <div class="ml">Words LinkedIn has</div><div class="chips">${chips(r.topList.filter(t=>t.known).map(t=>t.term),'g')}</div>
+      <div class="ml">Words LinkedIn is missing</div><div class="chips">${r.unknown.length?chips(r.unknown.map(u=>u.term),'miss'):'<span class="note">None of your top words are missing.</span>'}</div></div>
+   </div>
+   <p class="note">Fit score balances accuracy and coverage, so it is high only when LinkedIn is both right and complete. Filled chips are matches, dashed chips have no trace, and gold chips are missing from LinkedIn’s file.</p></div>`;
+  const html=sec({id:'s-mirror',num,title:'What LinkedIn thinks you care about',sub:'LinkedIn’s interest tags for you, tested against your own skills, job titles, posts and follows, and the other way around.',
+   cards:[['a',r.fit,'fit score out of 100: how well LinkedIn’s picture matches yours'],['c',r.accuracy+'%',`accuracy: LinkedIn’s ${r.nTags} guesses that match you`],['d',r.coverage+'%','coverage: your top topic words that LinkedIn has']],
+   hero,
+   more:`<div class="two"><div class="card"><h3>Every interest with no trace</h3><div class="chips">${chips(r.noTrace,'s')}</div>${r.noTraceN>r.noTrace.length?`<p class="note">Showing ${r.noTrace.length} of ${r.noTraceN}.</p>`:''}</div><div class="card"><h3>Where the matches come from</h3><div class="chips">${r.echoedSample.map(e=>`<span class="chip">${esc(e.tag)} <i style="opacity:.6">· ${esc(e.src.replace('your ','').replace('organizations you follow','follows'))}</i></span>`).join('')}</div></div></div>
+   <div class="card" style="margin-top:18px"><h3>LinkedIn’s official guesses about you</h3><div class="chips">${r.inferences.map(i=>`<span class="chip">${esc(i.type)}: ${esc(i.value)}</span>`).join('')}</div>${r.segments.length?`<p class="note">Audience segments you are sold as: ${r.segments.map(esc).join(', ')}.</p>`:''}</div>`,
+   take:`LinkedIn’s picture of you scores ${r.fit} out of 100 (${band.replace('LinkedIn is ','').replace('LinkedIn ','')}). Its accuracy is ${r.accuracy}%: of the ${r.nTags} interests it assigns you, ${r.echoed} show up in your own skills, titles, posts or follows. Its coverage is ${r.coverage}%: it has ${r.topTerms-r.unknownN} of your ${r.topTerms} most-used topic words${r.unknownN?`, missing ${r.unknown.slice(0,2).map(u=>'“'+esc(u.term)+'”').join(' and ')}`:''}. ${diag} Your profile’s words are how people find you in search, so they are worth getting right.`,
+   src:`Sources: Ad_Targeting.csv and Inferences_about_you.csv, compared with Skills.csv, Positions.csv, Profile.csv, your posts and comments, and Company Follows.csv. Your own posts and comments are read on this computer to count words; no sentences are shown. Word matching is approximate, so treat the score as a rough guide.`});
+  const init=()=>{lazy('m-s-mirror',()=>{})};
+  return {html,init};
+}
+
+/* ===== follows ===== */
+function sf(r,num){
+  const html=sec({id:'s-fol',num,title:'Who you follow',sub:`${r.total} organizations followed since ${new Date(r.first+'T12:00:00Z').getUTCFullYear()}, and how many of them you already have a way into.`,
+   cards:[['a',r.total,'organizations followed'],['b',r.last12,'followed in the last 12 months'],['d',r.connPct+'%',`have at least one of your connections working there (${r.withConn} of ${r.total})`]],
+   hero:card('When you followed',`<canvas id="fol-yr" height="130"></canvas>`,r.bigDay?`Your biggest day: ${fmtDay(r.bigDay.date)}, when you followed ${r.bigDay.n} organizations at once.`:''),
+   more:`<div class="two"><div class="card"><h3>Where you know the most people</h3><canvas id="fol-top" height="260"></canvas><p class="note">Connections whose current employer matches the organization&rsquo;s name. Names that overlap, such as a company and its learning arm, may count the same people.</p></div><div class="card"><h3>Followed, but no one you know there</h3><div class="chips" id="fol-none"></div><p class="note">${r.without} organizations${r.noConn.length<r.without?` (showing the ${r.noConn.length} most recent)`:''}. A ready-made list for introductions.</p></div></div>${r.people?`<div class="card" style="margin-top:18px"><h3>People you follow</h3><div class="chips"><span class="chip g">${fmt0(r.people.total)} in total</span><span class="chip">${fmt0(r.people.active)} active</span><span class="chip">${fmt0(r.people.unfollowed)} unfollowed</span><span class="chip">${fmt0(r.people.muted)} muted</span></div><p class="note">Counts only. The names are never read.</p></div>`:''}`,
+   take:`You follow ${r.total} organizations and know someone at ${r.withConn} of them (${r.connPct}%). That leaves ${r.without} you care about enough to follow but have no personal route into${r.last12?`, and you added ${r.last12} of the follows in the last year`:''}. Following shows interest. One conversation with someone there turns it into a relationship.`,
+   src:`Source: Company Follows.csv${r.people?' and Member_Follows.csv':''}, with Connections.csv for the overlap. Matching is by company name, so it is approximate. Grouping the organizations by theme needs judgment, so it is one of the starter-kit prompts.`});
+  const init=()=>{
+    const P=C();
+    chart('fol-yr',{data:{labels:r.years,datasets:[{type:'bar',label:'Followed that year',data:r.perYear,backgroundColor:P.blue,yAxisID:'y'},{type:'line',label:'Running total',data:r.cum,borderColor:P.gold,backgroundColor:P.gold,borderWidth:3,pointRadius:3,tension:.25,yAxisID:'y2'}]},options:{plugins:{legend:{labels:{font:fnt(600)}}},scales:{x:{grid:{display:false}},y:{title:{display:true,text:'Followed that year',font:fnt()},grid:{color:'#eee'}},y2:{position:'right',title:{display:true,text:'Running total',font:fnt()},grid:{display:false}}}}});
+    lazy('m-s-fol',()=>{
+      chart('fol-top',{type:'bar',data:{labels:r.topConn.map(t=>wrap(t.name,22)),datasets:[{data:r.topConn.map(t=>t.n),backgroundColor:P.gold,borderWidth:0}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x+' connections'}}},scales:{x:{grid:{color:'#eee'}},y:{grid:{display:false},ticks:{autoSkip:false,font:fnt(600,11)}}}}});
+      $('fol-none').innerHTML=r.noConn.map(n=>`<span class="chip">${esc(n)}</span>`).join('');
+    });
+  };
+  return {html,init};
+}
+const fmt0=n=>Number(n).toLocaleString('en-US');
+
+function destroyAll(){charts.forEach(c=>{try{c.destroy()}catch(e){}});charts.length=0;sims.forEach(s=>{try{s.stop()}catch(e){}});sims=[]}
+function rerunLazy(){Object.keys(lazyReg).forEach(id=>{const r=lazyReg[id];r.done=false;const d=$(id);if(d&&d.open){r.done=true;r.fn()}})}
+root.LDV.render={s01,s04,s06,s07,s08,s10,sf,sm,destroyAll,bindToggles,rerunLazy,lazyReg,setDefaults(){const P=C();Chart.defaults.font.family=P.font;Chart.defaults.color=P.ink;Chart.defaults.layout.padding={left:14,right:10,top:4,bottom:2}}};
+})();
+
+</script>
+<script id="src-lib-cards">
+(function(){
+const root=window;root.LDV=root.LDV||{};
+const mixc=(a,b,t)=>root.LDV.style.mix(a,b,t);
+function lum(hex){const h=hex.replace('#','');const v=[0,2,4].map(i=>parseInt(h.substr(i,2),16)/255).map(x=>x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4));return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2]}
+function onColor(bg,ink){const L=lum(bg);return (1.05)/(L+0.05)>=3?'#ffffff':ink}
+function goldOnInk(P){const a=lum(P.gold),b=lum(P.ink);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5?P.gold:'#ffffff'}
+const fmt=n=>Number(n).toLocaleString('en-US');
+
+/* ---- facts pulled from the section results ---- */
+function facts(res,ov){
+  const f={connections:ov.connections,messages:ov.messages,posts:ov.posts,now:ov.now,since:ov.since};
+  f.endYear=new Date(ov.now).getUTCFullYear();
+  f.years=ov.since?f.endYear-ov.since:null;
+  if(res.s07){const r=res.s07;f.everTwoPct=Math.round(100*r.pyramid[2]/r.total);f.everTwo=r.pyramid[2];f.twoLastYear=r.pyramid[3];f.everMsgPct=Math.round(100*r.pyramid[1]/r.total);f.neverPct=100-f.everMsgPct}
+  if(res.s06){const r=res.s06;f.inbound=r.inAll[0];f.outbound=r.outAll[0];f.ratio=r.outAll[0]?Math.round(r.inAll[0]/r.outAll[0]):null;f.acceptPct=r.inAll[0]?Math.round(100*r.inAll[1]/r.inAll[0]):null}
+  if(res.s10){const r=res.s10;f.peakYear=r.peakYear;f.peakCount=r.peakCount;f.years_=r.years;f.layers=layersFrom(r);f.cum=r.years.map((_,j)=>r.cum.reduce((a,row)=>a+row[j],0));const n=f.cum.length,back=Math.min(5,n-1);f.recentYears=back;f.recentPct=Math.round(100*(f.cum[n-1]-f.cum[n-1-back])/f.cum[n-1])}
+  if(res.s04){const p=res.s04;f.postR=p.full.r;f.postMean=p.postMonths.mean;f.noPostMean=p.noPostMean=p.noPostMonths.mean}
+  if(res.s01){f.top=res.s01.top}
+  if(res.s08){f.recent=res.s08.n;f.recentMsgPct=Math.round(100*res.s08.messaged/res.s08.n)}
+  return f;
+}
+
+function shortCo(n){
+  n=(n||'').replace(/\s*\(.*?\)/g,'').replace(/,\s*(from|an?|the)\s.*$/i,'').replace(/,?\s*(Inc|LLC|Ltd|Corp)\.?$/i,'').split(' / ')[0].trim();
+  return n||'';
+}
+function layersFrom(r){
+  // One band per employer: consecutive roles at the same company are merged into a single layer.
+  const out=[];
+  r.eras.forEach((e,i)=>{
+    let key,label;
+    if(/^Before /.test(e.name)){key='__before';label='Earlier career'}
+    else if(/^After /.test(e.name)){key='__after';label='Since '+shortCo(e.name.replace(/^After /,''))}
+    else{const co=e.name.split(' \u00B7 ')[0];key=co.toLowerCase();label=shortCo(co)||e.name}
+    const last=out[out.length-1];
+    if(last&&last.key===key){last.cum=last.cum.map((v,j)=>v+r.cum[i][j])}
+    else out.push({key,name:label,cum:r.cum[i].slice()});
+  });
+  return out;
+}
+function tiles(f){
+  const t=[];
+  t.push([fmt(f.connections),'connections','conn']);
+  if(f.years)t.push([String(f.years),'years of building my network','years']);
+  if(f.messages)t.push([fmt(f.messages),'messages exchanged','msgs']);
+  if(f.everTwo)t.push([fmt(f.everTwo),'conversations with my connections','two']);
+  if(f.twoLastYear)t.push([String(f.twoLastYear),'conversations in the last year','twoyr']);
+  if(f.inbound&&f.inbound>=10)t.push([fmt(f.inbound),'people asked to connect in six months','demand']);
+  else if(f.ratio)t.push(['~'+f.ratio+'\u00D7','more people ask me than I ask','ratio']);
+  if(f.peakYear)t.push([String(f.peakCount),'new connections in '+f.peakYear+', my best year','peak']);
+  if(f.posts)t.push([String(f.posts),'posts written','posts']);
+  return t;
+}
+function candidates(f){
+  const c=[];
+  if(f.inbound&&f.inbound>=10)c.push({id:'demand',label:'People reach out to me',text:`${fmt(f.inbound)} people asked to connect with me in the last six months.`,sub:f.ratio?`${f.outbound?'I asked '+f.outbound+'. ':''}About ${f.ratio}\u00D7 more people find me than I chase.`:'',uses:['demand','ratio']});
+  if(f.everTwo>=20)c.push({id:'two',label:'Conversations',text:`I\u2019ve had back-and-forth conversations with ${fmt(f.everTwo)} of my ${fmt(f.connections)} connections.`,sub:f.twoLastYear?`${f.twoLastYear} of them in the last year.`:'',uses:['two','twoyr']});
+  if(f.postMean&&f.noPostMean&&f.postMean>=1.4*f.noPostMean)c.push({id:'post',label:'Posting pays off',text:`In months when I post, I add about ${(f.postMean/f.noPostMean).toFixed(1).replace('.0','')}\u00D7 as many new connections.`,sub:`${f.postMean.toFixed(1)} vs ${f.noPostMean.toFixed(1)} new connections a month.`,uses:['posts']});
+  if(f.recentPct>=40)c.push({id:'recent',label:'Growing fast',text:`${f.recentPct}% of my network joined in the last ${f.recentYears} years.`,sub:f.peakYear?`${f.peakCount} new connections in ${f.peakYear}, my best year.`:'',uses:['peak']});
+  c.push({id:'grown',label:'Built over the years',text:`I've built a network of ${fmt(f.connections)} connections over ${f.years||'many'} years.`,sub:f.peakYear?`${f.peakCount} of them joined in ${f.peakYear}, my best year.`:'',uses:['conn','years','peak']});
+  return c;
+}
+function headline(f,id){const c=candidates(f);return c.find(x=>x.id===id)||c[0]}
+/* ---- drawing helpers ---- */
+function setup(ctx,P){return {head:(w,s)=>`${w} ${s}px ${P.headFam}`,body:(w,s)=>`${w} ${s}px ${P.bodyFam}`}}
+function fitText(ctx,str,maxW,fontFn,size,min){let s=size;ctx.font=fontFn(s);while(ctx.measureText(str).width>maxW&&s>(min||20)){s-=2;ctx.font=fontFn(s)}return s}
+function wrapLines(ctx,text,maxW){const w=text.split(' '),L=[];let c='';w.forEach(x=>{const t=c?c+' '+x:x;if(ctx.measureText(t).width>maxW&&c){L.push(c);c=x}else c=t});if(c)L.push(c);return L}
+function T(ctx,str,x,y,font,color,align){ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align||'left';ctx.textBaseline='alphabetic';ctx.fillText(str,x,y)}
+function compass(ctx,cx,cy,r,color,hole){
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=r*0.2;ctx.beginPath();ctx.arc(cx,cy,r*0.83,0,7);ctx.stroke();
+  const k=r/24;ctx.beginPath();ctx.moveTo(cx+9*k,cy-9*k);ctx.lineTo(cx+3.5*k,cy+3.5*k);ctx.lineTo(cx-9*k,cy+9*k);ctx.lineTo(cx-3.5*k,cy-3.5*k);ctx.closePath();ctx.fill();
+  ctx.fillStyle=hole;ctx.beginPath();ctx.arc(cx,cy,r*0.11,0,7);ctx.fill();ctx.restore();
+}
+function brand(ctx,xRight,y,size,P,color,hole){
+  const font=P.bodyFont(800,size);ctx.font=font;const w=ctx.measureText('Network Atlas').width;
+  T(ctx,'Network Atlas',xRight,y,font,color,'right');compass(ctx,xRight-w-size*0.9,y-size*0.33,size*0.62,color,hole);
+}
+function footer(ctx,W,y,P,color,f){T(ctx,'From my LinkedIn data export, '+f.endYear,60,y,P.bodyFont(600,18),color,'left');brand(ctx,W-60,y,20,P,color,mixc(P.soft,'#ffffff',.6))}
+
+/* ---- Card A: scoreboard ---- */
+function cardA(ctx,W,H,f,P){
+  ctx.fillStyle=mixc(P.soft,'#ffffff',.6);ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=P.gold;ctx.fillRect(60,46,420,34);T(ctx,'MY LINKEDIN, BY THE NUMBERS',74,70,P.bodyFont(800,17),onColor(P.gold,P.ink));
+  const cols=[P.ink,P.blue,P.red,P.gold,P.purple,P.grey],all=tiles(f),by=k=>all.find(t=>t[2]===k);
+  const order=['conn','years',by('demand')?'demand':'ratio','msgs','two','twoyr'].map(by).filter(Boolean);
+  const tl=order.concat(all.filter(t=>!order.includes(t))).slice(0,6);
+  const x0=60,y0=112,gap=18,tw=(W-120-2*gap)/3,th=(H-y0-92-gap)/2;
+  tl.forEach((t,i)=>{const c=i%3,r=Math.floor(i/3),x=x0+c*(tw+gap),y=y0+r*(th+gap);const bg=cols[i];
+    ctx.fillStyle=bg;ctx.fillRect(x,y,tw,th);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(x,y+th-8,tw,8);
+    const fg=onColor(bg,P.ink);const s=fitText(ctx,t[0],tw-48,P.headFont.bind(null,900),84,40);ctx.font=P.headFont(900,s);
+    T(ctx,t[0],x+24,y+th/2+s*0.1,P.headFont(900,s),i===0&&lum(P.gold)>0.2?P.gold:fg);
+    const lines=(()=>{ctx.font=P.bodyFont(600,21);return wrapLines(ctx,t[1],tw-48)})();
+    lines.slice(0,2).forEach((ln,k)=>T(ctx,ln,x+24,y+th/2+s*0.1+34+k*26,P.bodyFont(600,21),fg));});
+  footer(ctx,W,H-34,P,P.grey,f);
+}
+/* ---- Card B: headline ---- */
+function cardB(ctx,W,H,f,P,opt){
+  const lw=Math.round(W*0.62);
+  ctx.fillStyle=P.ink;ctx.fillRect(0,0,lw,H);ctx.fillStyle=mixc(P.soft,'#ffffff',.6);ctx.fillRect(lw,0,W-lw,H);
+  const fg=onColor(P.ink,P.ink);ctx.fillStyle=P.gold;ctx.fillRect(60,70,90,10);
+  const hl=headline(f,opt&&opt.headline);let size=70;let lines;
+  for(;size>=40;size-=4){ctx.font=P.headFont(900,size);lines=wrapLines(ctx,hl.text,lw-120);if(lines.length*size*1.12<H-360)break}
+  lines.forEach((ln,i)=>T(ctx,ln,60,150+size+i*size*1.12,P.headFont(900,size),fg));
+  if(hl.sub){ctx.font=P.bodyFont(600,28);wrapLines(ctx,hl.sub,lw-120).slice(0,3).forEach((ln,k)=>T(ctx,ln,60,150+size+lines.length*size*1.12+14+k*36,P.bodyFont(600,28),goldOnInk(P)))}
+  T(ctx,'My LinkedIn, by the numbers',60,H-36,P.bodyFont(600,18),mixc(P.ink,'#ffffff',.6));brand(ctx,lw-48,H-36,22,P,goldOnInk(P),P.ink);
+  const tl=tiles(f).filter(t=>!hl.uses.includes(t[2])&&!(hl.id!=='grown'&&t[2]==='conn'&&false)).slice(0,3),cs=[P.blue,P.red,P.gold];
+  const ph=(H-120-2*16)/3;
+  tl.forEach((t,i)=>{const x=lw+36,y=60+i*(ph+16),w=W-lw-72;ctx.fillStyle=cs[i];ctx.fillRect(x,y,w,ph);const fgc=onColor(cs[i],P.ink);
+    const s=fitText(ctx,t[0],w-40,P.headFont.bind(null,900),64,36);T(ctx,t[0],x+20,y+ph/2+s*0.1,P.headFont(900,s),fgc);
+    ctx.font=P.bodyFont(600,19);wrapLines(ctx,t[1],w-40).slice(0,2).forEach((ln,k)=>T(ctx,ln,x+20,y+ph/2+s*0.1+28+k*23,P.bodyFont(600,19),fgc));});
+}
+/* ---- Card C: portrait ---- */
+function cardC(ctx,W,H,f,P){
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=P.gold;ctx.fillRect(60,46,330,34);T(ctx,'MY NETWORK, '+(f.since||'')+'–'+f.endYear,74,70,P.bodyFont(800,17),onColor(P.gold,P.ink));
+  const cx=290,cy=322,R=158,top=(f.top||[]).slice(0,8),cat=[P.blue,P.gold,P.red,P.purple,P.ink,P.grey,mixc(P.blue,'#ffffff',.45),mixc(P.gold,'#ffffff',.45)];
+  const mx=Math.max(1,...top.map(t=>t.count));
+  top.forEach((t,i)=>{const a=-Math.PI/2+i/top.length*2*Math.PI,x=cx+Math.cos(a)*R,y=cy+Math.sin(a)*R;ctx.strokeStyle=mixc(P.grey,'#ffffff',.3);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke()});
+  top.forEach((t,i)=>{const a=-Math.PI/2+i/top.length*2*Math.PI,x=cx+Math.cos(a)*R,y=cy+Math.sin(a)*R,r=12+Math.sqrt(t.count/mx)*32;ctx.fillStyle=cat[i];ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke();
+    const nm=t.name.replace(' & ',' &\n').split('\n');const above=Math.sin(a)<-0.2;nm.forEach((ln,k)=>T(ctx,ln,x,above?y-r-8-(nm.length-1-k)*17:y+r+18+k*17,P.bodyFont(700,14),P.ink,'center'))});
+  ctx.fillStyle=P.ink;ctx.beginPath();ctx.arc(cx,cy,46,0,7);ctx.fill();T(ctx,'ME',cx,cy+9,P.headFont(900,26),onColor(P.ink,P.ink),'center');
+  // growth by career stage: stacked layers with the employer named inside each band
+  const gx=590,gy=118,gw=W-gx-60,gh=272,L=f.layers||[],ny=(f.years_||[]).length;
+  if(L.length&&ny>1){
+    const tot=f.cum,mxv=Math.max(1,...tot),X=j=>gx+j/(ny-1)*gw,Yv=v=>gy+gh-v/mxv*gh;
+    const lower=L.map((_,i)=>f.years_.map((_,j)=>L.slice(0,i).reduce((a,l)=>a+l.cum[j],0)));
+    const upper=L.map((l,i)=>f.years_.map((_,j)=>lower[i][j]+l.cum[j]));
+    const cols=[P.grey,mixc(P.gold,'#ffffff',.25),P.gold,P.red,P.blue,P.ink,P.purple,mixc(P.blue,'#ffffff',.4),mixc(P.red,'#ffffff',.4),mixc(P.purple,'#ffffff',.4)];
+    L.forEach((l,i)=>{ctx.beginPath();for(let j=0;j<ny;j++){j?ctx.lineTo(X(j),Yv(upper[i][j])):ctx.moveTo(X(j),Yv(upper[i][j]))}for(let j=ny-1;j>=0;j--)ctx.lineTo(X(j),Yv(lower[i][j]));ctx.closePath();ctx.fillStyle=cols[i%cols.length];ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.stroke()});
+    const at=(arr,x)=>{const t=(x-gx)/gw*(ny-1),j=Math.max(0,Math.min(ny-2,Math.floor(t))),u=t-j;return arr[j]*(1-u)+arr[j+1]*u};
+    L.forEach((l,i)=>{
+      const bg=cols[i%cols.length],fg=onColor(bg,P.ink);
+      for(let fs=22;fs>=12;fs-=2){
+        ctx.font=P.bodyFont(800,fs);const w=ctx.measureText(l.name).width+16;let best=null;
+        for(let cx=gx+w/2;cx<=gx+gw-w/2;cx+=6){
+          let ok=true,thin=1e9;
+          for(let x=cx-w/2;x<=cx+w/2;x+=6){const th=(at(upper[i],x)-at(lower[i],x))/mxv*gh;if(th<fs*1.35){ok=false;break}thin=Math.min(thin,th)}
+          if(ok&&(!best||thin>best.thin))best={cx,thin};
+        }
+        if(best){const yMid=Yv((at(upper[i],best.cx)+at(lower[i],best.cx))/2);T(ctx,l.name,best.cx,yMid+fs*0.35,P.bodyFont(800,fs),fg,'center');break}
+      }
+    });
+    T(ctx,String(f.years_[0]),gx,gy+gh+28,P.bodyFont(600,18),P.grey);T(ctx,String(f.years_[ny-1]),gx+gw,gy+gh+28,P.bodyFont(600,18),P.grey,'right');
+    T(ctx,fmt(mxv),gx+gw,gy-12,P.headFont(900,30),P.ink,'right');
+  }
+  const tl=tiles(f).filter(t=>t[2]!=='conn').slice(0,3);
+  tl.forEach((t,i)=>{const w=(gw-2*16)/3,x=gx+i*(w+16),y=H-190,bg=[P.blue,P.red,P.ink][i];ctx.fillStyle=bg;ctx.fillRect(x,y,w,120);const fg=onColor(bg,P.ink);
+    const s=fitText(ctx,t[0],w-28,P.headFont.bind(null,900),48,28);T(ctx,t[0],x+14,y+52,P.headFont(900,s),fg);ctx.font=P.bodyFont(600,15);wrapLines(ctx,t[1],w-28).slice(0,2).forEach((ln,k)=>T(ctx,ln,x+14,y+78+k*19,P.bodyFont(600,15),fg))});
+  footer(ctx,W,H-34,P,P.grey,f);
+}
+/* ---- Card D: story (vertical) ---- */
+function cardD(ctx,W,H,f,P){
+  ctx.fillStyle=mixc(P.soft,'#ffffff',.6);ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=P.gold;ctx.fillRect(70,90,520,48);T(ctx,'MY LINKEDIN, BY THE NUMBERS',90,124,P.bodyFont(800,24),onColor(P.gold,P.ink));
+  const tl=tiles(f).slice(0,5),cs=[P.ink,P.blue,P.red,P.gold,P.purple],bh=(H-250-120-4*14)/5;
+  tl.forEach((t,i)=>{const y=190+i*(bh+14);ctx.fillStyle=cs[i];ctx.fillRect(70,y,W-140,bh);const fg=onColor(cs[i],P.ink);
+    const s=fitText(ctx,t[0],W-140-80,P.headFont.bind(null,900),170,70);T(ctx,t[0],110,y+bh/2+s*0.06,P.headFont(900,s),i===0&&lum(P.gold)>0.2?P.gold:fg);
+    ctx.font=P.bodyFont(600,32);wrapLines(ctx,t[1],W-140-80).slice(0,2).forEach((ln,k)=>T(ctx,ln,110,y+bh/2+s*0.06+62+k*38,P.bodyFont(600,32),fg))});
+  T(ctx,'From my LinkedIn data export, '+f.endYear,70,H-52,P.bodyFont(600,24),P.grey);brand(ctx,W-70,H-52,28,P,P.ink,mixc(P.soft,'#ffffff',.6));
+}
+const LAYOUTS=[
+ {id:'B',name:'Headline',desc:'One striking finding in big type, with three supporting numbers.',w:1200,h:630,draw:cardB},
+ {id:'A',name:'Scoreboard',desc:'Six big numbers on colored tiles. Reads at a glance.',w:1200,h:630,draw:cardA},
+ {id:'C',name:'Portrait',desc:'A mini network map and growth curve, with three numbers.',w:1200,h:630,draw:cardC},
+ {id:'D',name:'Story',desc:'Tall format for phone stories and mobile feeds.',w:1080,h:1920,draw:cardD}];
+async function render(canvas,layoutId,res,ov,opt){
+  const st=root.LDV.style,P=st.C();const cs=getComputedStyle(document.documentElement);
+  P.headFam=cs.getPropertyValue('--font-head').trim()||'Inter,sans-serif';P.bodyFam=cs.getPropertyValue('--font-body').trim()||'Inter,sans-serif';
+  P.headFont=(w,s)=>`${w} ${s}px ${P.headFam}`;P.bodyFont=(w,s)=>`${w} ${s}px ${P.bodyFam}`;
+  try{await Promise.all([document.fonts.load(`900 40px ${P.headFam}`),document.fonts.load(`600 20px ${P.bodyFam}`),document.fonts.load(`800 20px ${P.bodyFam}`)])}catch(e){}
+  const L=LAYOUTS.find(l=>l.id===layoutId)||LAYOUTS[0];canvas.width=L.w;canvas.height=L.h;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,L.w,L.h);L.draw(ctx,L.w,L.h,facts(res,ov),P,opt);return L;
+}
+root.LDV.cards={LAYOUTS,render,facts,tiles,headline,candidates};
+})();
+
+</script>
+<script id="src-app">
+(function(){
+// Snapshot of the untouched page, used later to build a standalone copy of the report.
+const LICENSE_NOTE='<!-- Network Atlas. Copyright 2026 Mary-Lynn Bragg (https://www.linkedin.com/in/marylynn). Licensed under the PolyForm Noncommercial License 1.0.0: https://polyformproject.org/licenses/noncommercial/1.0.0 . Free for noncommercial use with this notice kept. SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->';
+const PRISTINE='<!doctype html>\n'+LICENSE_NOTE+'\n'+document.documentElement.outerHTML;
+const $=id=>document.getElementById(id);
+const L=window.LDV,S=L.style,R=L.render;
+const REPORT=window.__REPORT__||null;
+let DATA=null,RES=null,NOTES=[],OV=null;
+let CARD={layout:'B',headline:'auto'};try{Object.assign(CARD,JSON.parse(localStorage.getItem('ldv-card-v2')||'{}'))}catch(e){}
+const MAP={s01:R.s01,s04:R.s04,s06:R.s06,s07:R.s07,s08:R.s08,s10:R.s10,sf:R.sf,sm:R.sm};
+
+/* ---------- AI prompts and starter kit ---------- */
+const PRELUDE_PRIVATE="\n\nThis is a private action list for my own use, so you may use names. Save it in a file whose name starts with PRIVATE-, put a note at the top saying it must not be shared or published, and do not send any of it anywhere.";
+const PRELUDE="\n\nPrivacy rules: Keep the work on my computer. In your output, never include names, email addresses, phone numbers or message text of other people. Describe people by role, relationship or industry instead. Company names are fine.";
+const PROMPTS=[
+['inferences','LinkedIn’s inferences vs. your reality','See what LinkedIn thinks it knows about you, and where it is wrong.','Open Inferences_about_you.csv and Ad_Targeting.csv from my LinkedIn data export. What does LinkedIn think it knows about me? Check each official inference against my actual profile, Positions.csv and my real behavior. Then compare LinkedIn’s interest tags and audience segments with what I actually follow (Company Follows.csv) and write about (Shares.csv and Comments.csv): group everything into the same 6 to 9 themes and show the share of each source per theme. Finish with three lists: what LinkedIn gets right, what it misses, and what it can’t see. Build it as one self-contained HTML section with a grouped Chart.js bar chart, three headline cards and a short takeaway.'],
+['lost-opportunities','Lost-opportunity messages','Find the messages that deserved a reply and how long they have waited.','Go through messages.csv and find unanswered messages that look like real opportunities: collaboration offers, meeting requests, warm introductions, podcast or speaking invitations. A thread is unanswered when the last message is from someone else. Prioritize threads where the sender followed up or a mutual connection made the introduction, and ignore job applicants, mass sales pitches and expert-network blasts. For each one show how long it has been waiting and one suggested next step. Describe each person by role and relationship, never by name. Output a ranked table with priority icons (!!, !, ·), a type tag and the wait time.'],
+['follows','Who you actually follow','Cluster the companies you follow by theme.','Read Company Follows.csv and group the organizations I follow into 6 to 9 themes (for example EdTech, AI, Workforce, Higher Ed, Business, Big Employers). Assign each organization to exactly one theme based on what it actually does, put anything you can’t place confidently in an “Unclear” group, and show how many are in each cluster as a bar chart plus a cluster map. Tell me which themes are bigger than I would expect.'],
+['inbox-quality','Inbox quality','How much of your inbound is genuine outreach versus pitches and spam?','Analyze the conversations other people started with me in messages.csv. Read the opening message of each and label it: genuine outreach, sales pitch, spam or mass message, recruiter, or job seeker. Show the percentages overall and per half-year as a 100% stacked bar chart with conversation counts, and call out any spikes and their cause.'],
+['job-search','Your job-search signals','What your searches, saved jobs and settings say about where you are headed.','Look at SearchQueries.csv, Jobs/Saved Jobs.csv, SavedJobAlerts.csv and Jobs/Job Seeker Preferences.csv. Group my searches by month and type (job titles, organizations, people), find the phases of my job search, and compare what I save in recent months with what I saved earlier (by function and sector). Then compare my stated job preferences with what I actually do. Leave phone numbers and email addresses out of the output.'],
+['targets','Are your targets in your network?','Count how many people you know at the companies you are chasing.','List the organizations I have saved jobs at or searched for, then count how many of my connections (Connections.csv, Company field) work at each. Show which targets have zero connections and which have someone I have actually messaged (messages.csv). Also count senior people in my network in the functions I am targeting. If I plan to share the result, replace company names with short descriptions.']
+,['reactivation','Reconnection list','Who to wake up first, with an opening line for each.','Using Connections.csv and messages.csv, find the people I have exchanged messages with in both directions but not in the last year or more (dormant ties). Rank the 15 most worth reconnecting with, considering how substantial our past conversation was (number of messages), how relevant or senior their current role is, and how long it has been. For each, give their name, current role and company, when we last talked, what we talked about in one line (you may read the message text for this, locally), and a short, warm, specific opening message I could send. Output a checklist I can work through, 5 a week.',true]
+,['weak-ties','Weak-ties map','The acquaintances most likely to bring you something new.','Find the 15 weak ties in my network most likely to give me new information or opportunities: connections I have rarely or never messaged, who work in a different industry or kind of company than most of my network, and who hold senior or well-connected roles. Explain in one line why each is a good bridge, and suggest one low-effort reason to reach out (a congratulation, a question, something shared). Group them by the gap they could help me cross.',true]
+,['hello-drafts','Hello drafts for new connections','Short, warm notes for people you connected with but never spoke to.','List the connections I added in the last 90 days (Connections.csv) with whom I have exchanged no messages (messages.csv). For up to 15 of them, draft a two-sentence hello based on their company and role and on who asked whom (Invitations.csv). Keep the tone warm and low-pressure, with no sales pitch and no ask.',true]
+,['posting-plan','Posting plan','Topics and a realistic rhythm, based on what you know and follow.','Look at my posts (Shares.csv) and the months with the most new connections (Connections.csv). Describe what I have posted about and when. Then, using my skills (Skills.csv), my positions (Positions.csv) and the organizations I follow (Company Follows.csv), suggest five post topics and a realistic three-month posting rhythm. Do not mention any other people.',false]
+
+];
+
+const prel=p=>p[4]?PRELUDE_PRIVATE:PRELUDE;
+function claudeMd(){
+  const st=S.get(),c=st.c;
+  return `# Standing instructions for analyzing my LinkedIn export
+
+This folder holds my LinkedIn data export (CSV files). I want visual analyses of it, each as a self-contained HTML file.
+
+## Privacy rules (always)
+- Keep the work on this computer. Do not upload files or send data to any outside service other than this assistant itself.
+- Never include names, email addresses, phone numbers, profile URLs or message text of other people in any output. Describe people by role, relationship or industry. Company names are fine.
+- If I say I plan to share a result, also describe companies in general terms (for example "a large CRM software company") instead of naming them.
+- Before you finish, scan your output for personal names and remove any you find.
+- Exception: a file whose name starts with PRIVATE- is a personal action list for my own use. It may name people, must say at the top that it is not to be shared, and must never be sent anywhere.
+
+## Output format
+- Save each analysis as one self-contained HTML file in an \`output/\` folder.
+- Use Chart.js (https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js) for ordinary charts and D3.js (https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js) for network graphs.
+- White page background. Body font: ${st.body}. Heading font: ${st.head}, bold. Load both from Google Fonts.
+- Use only this palette: ink ${c.ink} for text, borders and dark tiles; accents ${c.gold}, ${c.red}, ${c.blue} and ${c.purple}; neutral ${c.grey}; soft background ${c.soft}.
+- Layout: a title with a one-line subtitle, three headline number cards, one main visual, and a short takeaway. End with a one-line note on the source files and any caveats.
+- Be honest about uncertainty. Say when something is a judgment call or rests on keyword rules.
+
+## Data notes
+- Connections.csv starts with a few lines of notes. The real header is the line that begins with "First Name".
+- messages.csv: FROM and SENDER PROFILE URL identify the sender. I am the sender with the most messages.
+- Dates come in several formats. Invitations.csv uses M/D/YY, h:mm AM/PM.
+- Shares and Comments files may have a numeric suffix in the name (for example Shares_123456.csv).
+`;
+}
+function startHere(){
+  return `# Start here
+
+You have a LinkedIn data export and an AI assistant that can read files on your computer (for example Claude Code). This kit gives the assistant standing instructions and ten analyses to run: six that dig deeper, and four that turn your results into an action plan.
+
+## Set up
+1. Unzip this kit into the folder that holds your LinkedIn export, so \`CLAUDE.md\` and \`prompts/\` sit next to files like Connections.csv.
+2. Open your AI assistant inside that folder.
+3. Tell it: "Read START-HERE.md and CLAUDE.md, then run analysis 1."
+
+## The analyses
+${PROMPTS.map((p,i)=>`${i+1}. **${p[1]}**${p[4]?' (PRIVATE)':''} (\`prompts/${String(i+1).padStart(2,'0')}-${p[0]}.md\`): ${p[2]}`).join('\n')}
+
+The last four turn your results into a plan. The first three of those are marked PRIVATE: they name real people so you can act on them, so keep those files to yourself.
+
+Run them one at a time and look at each result before moving on.
+
+## Before you share anything
+- Read the output for names, small employers that point to one person, or message details.
+- Ask the assistant: "Scan this output for any personal names or details that could identify someone, and remove them."
+- Your data is only as private as the tools you hand it to. Check your AI tool's data policy.
+
+## Combine them
+Each analysis comes out as its own HTML file in \`output/\`. Open them in a browser, or ask the assistant to merge them into one page in the same style.
+
+Made with Network Atlas, built by Mary-Lynn Bragg (https://www.linkedin.com/in/marylynn) with Claude Code. Format adapted from "Visualize Your LinkedIn Data Export" by Logan Currie.
+`;
+}
+async function downloadKit(){
+  const z=new JSZip();
+  z.file('START-HERE.md',startHere());z.file('CLAUDE.md',claudeMd());
+  PROMPTS.forEach((p,i)=>z.file(`prompts/${String(i+1).padStart(2,'0')}-${p[0]}.md`,`# ${p[1]}${p[4]?' (private)':''}\n\n${p[3]}${prel(p)}\n\nSave the result as output/${p[4]?'PRIVATE-':''}${String(i+1).padStart(2,'0')}-${p[0]}.html\n`));
+  save(await z.generateAsync({type:'blob'}),'linkedin-ai-starter-kit.zip');
+}
+function save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function buildPrompts(){
+  $('ai-grid').innerHTML=PROMPTS.map((p,i)=>`<div class="pl"><div class="pl-h"><div><b>${i+1}. ${p[1]}${p[4]?' <span class="tag">private</span>':''}</b><span>${p[2]}</span></div><button class="btn mini" data-i="${i}">Copy</button></div><details><summary>View prompt</summary><pre id="pr-${i}"></pre></details></div>`).join('');
+  PROMPTS.forEach((p,i)=>{$('pr-'+i).textContent=p[3]+prel(p)});
+  $('ai-grid').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(!b)return;const t=PROMPTS[+b.dataset.i][3]+prel(PROMPTS[+b.dataset.i]);(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent='Copied!'},()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');b.textContent='Copied!'}catch(x){b.textContent='Copy failed'}ta.remove()});setTimeout(()=>b.textContent='Copy',1800)});
+  $('btn-kit').onclick=downloadKit;
+}
+
+/* ---------- standalone report (.html) ---------- */
+const SC_END='<'+'/script>';
+async function buildReportHTML(){
+  const rep={v:1,generated:new Date().toISOString().slice(0,10),overview:L.an.overview(DATA),missing:missingFiles(DATA),notes:NOTES,sections:RES.map(r=>({key:r.key,res:r.res}))};
+  const json=s=>JSON.stringify(s).replace(/</g,'\\u003c');
+  let html=PRISTINE;
+  // Put the chart libraries inside the file so it works offline. Fall back to the CDN link if a download fails.
+  const tags=[...html.matchAll(/<script src="(https:\/\/cdnjs[^"]+)"><\/script>/g)];
+  for(const m of tags){
+    if(/jszip/i.test(m[1])){html=html.replace(m[0],()=>'');continue}
+    try{const r=await fetch(m[1]);if(!r.ok)throw 0;const t=await r.text();if(/<\/script/i.test(t))throw 0;html=html.replace(m[0],()=>'<script>'+t+SC_END)}catch(e){}
+  }
+  html=html.replace('<script id="src-lib-csv">',()=>'<script>window.__REPORT__='+json(rep)+';window.__STYLE__='+json(S.get())+';'+SC_END+'\n<script id="src-lib-csv">');
+  html=html.replace(/<title>[^<]*<\/title>/,'<title>My LinkedIn data, visualized</title>').replace('<body>','<body class="report">');
+  return html;
+}
+async function downloadReport(){
+  const b=$('btn-save'),t=b.textContent;b.textContent='Building…';b.disabled=true;
+  try{const html=await buildReportHTML();save(new Blob([html],{type:'text/html'}),'linkedin-report-'+new Date().toISOString().slice(0,10)+'.html')}
+  catch(e){alert('Could not build the report file: '+e.message)}
+  b.textContent=t;b.disabled=false;
+}
+
+/* ---------- save a chart as an image ---------- */
+function slug(s){return (s||'chart').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50)}
+function canvasPng(cv,name){
+  const o=document.createElement('canvas');o.width=cv.width;o.height=cv.height;const x=o.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,o.width,o.height);x.drawImage(cv,0,0);
+  o.toBlob(b=>save(b,name+'.png'));
+}
+function svgPng(svg,name){
+  const vb=svg.viewBox.baseVal,w=vb.width,h=vb.height,cl=svg.cloneNode(true);
+  const a=svg.querySelectorAll('text'),b=cl.querySelectorAll('text');
+  a.forEach((t,i)=>{const cs=getComputedStyle(t);b[i].setAttribute('style',`font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};fill:${cs.fill}`)});
+  cl.setAttribute('xmlns','http://www.w3.org/2000/svg');cl.setAttribute('width',w*2);cl.setAttribute('height',h*2);cl.removeAttribute('style');
+  const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');bg.setAttribute('width',w);bg.setAttribute('height',h);bg.setAttribute('fill',getComputedStyle(svg).backgroundColor||'#fff');cl.insertBefore(bg,cl.firstChild);
+  const img=new Image();img.onload=()=>{const o=document.createElement('canvas');o.width=w*2;o.height=h*2;const x=o.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,o.width,o.height);x.drawImage(img,0,0);o.toBlob(bb=>save(bb,name+'.png'))};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(cl));
+}
+function addImageButtons(){
+  document.querySelectorAll('#results .card').forEach(card=>{
+    if(card.querySelector('.png'))return;
+    const cv=card.querySelector('canvas'),sv=card.querySelector('svg.net');
+    if(!cv&&!sv)return;
+    const btn=document.createElement('button');btn.className='png';btn.textContent='Save image';btn.title='Save this chart as a PNG image';card.classList.add('has-img');
+    const h=card.querySelector('h3'),sec=card.closest('.sec');const name=(sec?sec.id.replace('s-',''):'chart')+'-'+slug(h?h.textContent:'');
+    btn.onclick=()=>{if(sv)svgPng(sv,name);else canvasPng(cv,name)};
+    card.appendChild(btn);
+  });
+}
+
+/* ---------- reading files ---------- */
+function status(msg,err){const el=$('status');if(el)el.innerHTML=msg?`<span class="${err?'err':''}">${msg}</span>`:''}
+async function fromList(list,files){
+  for(const f of list){
+    if(/\.zip$/i.test(f.name)){const z=await JSZip.loadAsync(f);for(const name of Object.keys(z.files)){const e=z.files[name];if(e.dir||!/\.csv$/i.test(name))continue;files[name.split('/').pop()]=await e.async('string')}}
+    else if(/\.csv$/i.test(f.name))files[f.name]=await f.text();
+  }
+}
+function walk(entry,files){return new Promise(res=>{
+  if(entry.isFile){entry.file(async f=>{if(/\.csv$/i.test(f.name))files[f.name]=await f.text();else if(/\.zip$/i.test(f.name))await fromList([f],files);res()},()=>res())}
+  else if(entry.isDirectory){const rd=entry.createReader();const all=[];const next=()=>rd.readEntries(async es=>{if(!es.length){for(const e of all)await walk(e,files);res()}else{all.push(...es);next()}},()=>res());next()}
+  else res()})}
+async function handleDrop(dt){
+  const files={};status('Reading your files…');
+  const items=[...(dt.items||[])].map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
+  if(items.length){for(const e of items)await walk(e,files)}else await fromList([...dt.files],files);
+  run(files);
+}
+async function handleList(list){const files={};status('Reading your files…');try{await fromList([...list],files);run(files)}catch(e){status('Could not read those files: '+e.message,true)}}
+
+/* ---------- analysis + render ---------- */
+function makeEnv(){return {report:!!REPORT}}
+function compute(D){
+  const A=L.an,out=[],notes=[];
+  const add=(key,needs,r)=>{if(r)out.push({key,fn:MAP[key],res:r});else notes.push(needs)};
+  add('s01','Network clusters needs Connections.csv with at least 20 connections.',A.sec01(D));
+  add('s04',D.found.shares?'Posting vs. connections needs at least 5 posts in Shares.csv.':'Posting vs. connections needs Shares.csv (your posts).',A.sec04(D));
+  add('s06','Inbound vs. outbound needs Invitations.csv.',A.sec06(D));
+  add('s07','Relationship tiers need messages.csv and Connections.csv.',A.sec07(D));
+  add('s08','The connection timeline needs at least 5 recent connections.',A.sec08(D));
+  add('s10','Career stages need Connections.csv with at least 30 connections.',A.sec10(D));
+  add('sf','Follows need Company Follows.csv with at least 5 organizations.',A.secFol(D));
+  add('sm','The LinkedIn-vs-you comparison needs Ad_Targeting.csv from the full export.',A.secMirror(D));
+  return {out,notes};
+}
+function missingFiles(D){return ['Messages','Invitations','Shares','Positions'].filter(k=>!D.found[k.toLowerCase()]).map(k=>k+'.csv')}
+function showLoaded(ov,missing){
+  $('loaded').style.display='';
+  $('loaded').innerHTML=`<div class="box"><b>${REPORT?'Report':'Loaded'}</b><span>${ov.connections.toLocaleString()} connections</span><span>${ov.messages.toLocaleString()} messages</span><span>${ov.posts} posts</span><span>${ov.invitations} invitations</span><span>latest activity in export: ${ov.now}</span>${(missing.length||NOTES.length)?`<span class="miss">${missing.length?'Not found: '+missing.join(', ')+'. ':''}${NOTES.length?'Skipped: '+NOTES.join(' '):''}</span>`:''}</div>`;
+}
+function run(files){
+  const names=Object.keys(files);
+  if(!names.length){status('I did not find any CSV files in that. Try the .zip LinkedIn emailed you, or choose the unzipped folder.',true);return}
+  const D=L.data.build(files);
+  if(!D.found.connections){status('I could not find Connections.csv. Please drop the full export (the .zip or the unzipped folder).',true);return}
+  DATA=D;OV=L.an.overview(D);const c=compute(D);RES=c.out;NOTES=c.notes;status('');
+  renderAll();
+  showLoaded(L.an.overview(D),missingFiles(D));
+  $('btn-print').style.display='';$('btn-save').style.display='';
+  setTimeout(()=>$('loaded').scrollIntoView({behavior:'smooth'}),50);
+}
+function renderAll(){
+  if(!RES)return;
+  const openIds=[...document.querySelectorAll('details.more[open]')].map(d=>d.id);
+  R.destroyAll();R.setDefaults();
+  const env=makeEnv();
+  const built=RES.map((r,i)=>r.fn(r.res,'1.'+String(i+1).padStart(2,'0'),env));
+  const band=(cls,kick,h,p)=>`<div class="part ${cls}"><div><small>${kick}</small><h2>${h}</h2><p>${p}</p></div></div>`;
+  $('results').innerHTML=band('p1','Part one','Analysis','What your export says about your network, one question at a time.')+built.map(b=>b.html).join('');
+  openIds.forEach(id=>{const d=$(id);if(d)d.open=true});
+  built.forEach(b=>b.init());
+  const rd=L.recs.build(resByKey());let rn=0;
+  if(rd.picks.length||!REPORT){$('results').insertAdjacentHTML('beforeend',band('p2','Part two','Recommendations','What to do about it: moves picked from your own numbers, and a kit for going deeper with your own AI.'))}
+  if(rd.picks.length){rn++;const holder=document.createElement('div');holder.innerHTML=L.recs.section('2.'+String(rn).padStart(2,'0'),rd,{report:!!REPORT});$('results').appendChild(holder.firstElementChild)}
+  R.bindToggles();addImageButtons();renderCard();
+  const secs=[...document.querySelectorAll('#results .sec')];
+  const an=secs.filter(s=>!s.classList.contains('rc')),rec=secs.filter(s=>s.classList.contains('rc'));
+  const link=(s,i,t)=>`<a class="nl" href="#${s}" title="${t}">${i}</a>`;
+  $('nav-an').innerHTML='<span class="nlab">Analysis</span>'+an.map((s,i)=>link(s.id,'1.'+String(i+1).padStart(2,'0'),(s.querySelector('h2')||{}).textContent||'')).join('');
+  let rl=rec.map((s,i)=>link(s.id,'2.'+String(i+1).padStart(2,'0'),'Recommendations')).join('');
+  if(!REPORT){const ai=$('s-ai');ai.style.display='';$('ai-num').textContent='2.'+String(rn+1).padStart(2,'0');rl+=link('s-ai','2.'+String(rn+1).padStart(2,'0'),'Go deeper with your own AI')}
+  $('nav-rec').innerHTML=rl?'<span class="nlab">Recommendations</span>'+rl:'';
+}
+
+
+/* ---------- summary card ---------- */
+function resByKey(){const o={};(RES||[]).forEach(r=>o[r.key]=r.res);return o}
+let cardTok=0;
+async function renderCard(){
+  if(!RES||!OV)return;
+  const sec=$('s-card');sec.style.display='';
+  const res=resByKey(),f=L.cards.facts(res,OV),cands=L.cards.candidates(f);
+  if(!$('card-layouts').childElementCount){$('card-layouts').innerHTML=L.cards.LAYOUTS.map(l=>`<button data-l="${l.id}" title="${l.desc}">${l.name}</button>`).join('')}
+  document.querySelectorAll('#card-layouts button').forEach(b=>b.classList.toggle('on',b.dataset.l===CARD.layout));
+  $('card-hl').innerHTML=cands.map(c=>`<option value="${c.id}" ${(CARD.headline===c.id)?'selected':''}>${c.label}</option>`).join('');
+  const hid=cands.some(c=>c.id===CARD.headline)?CARD.headline:cands[0].id;
+  $('card-hl-wrap').style.display=CARD.layout==='B'?'':'none';
+  const tok=++cardTok;const lay=await L.cards.render($('card-cv'),CARD.layout,res,OV,{headline:hid});
+  if(tok!==cardTok)return;
+  $('card-note').textContent=`${lay.name}: ${lay.desc} Saved at ${lay.w}\u00D7${lay.h} pixels.`;
+}
+function wireCard(){
+  $('card-layouts').addEventListener('click',e=>{const b=e.target.closest('button[data-l]');if(!b)return;CARD.layout=b.dataset.l;persistCard();renderCard()});
+  $('card-hl').onchange=e=>{CARD.headline=e.target.value;persistCard();renderCard()};
+  $('card-dl').onclick=()=>$('card-cv').toBlob(b=>save(b,'linkedin-summary-card-'+CARD.layout.toLowerCase()+'.png'));
+}
+function persistCard(){try{localStorage.setItem('ldv-card-v2',JSON.stringify(CARD))}catch(e){}}
+
+/* ---------- style drawer ---------- */
+let rt=null;const restyle=()=>{S.apply();clearTimeout(rt);rt=setTimeout(renderAll,120)};
+function buildDrawer(){
+  const st=S.get();
+  $('d-pre').innerHTML=S.PRESETS.map(p=>`<button data-p="${p.id}" class="${st.preset===p.id?'on':''}">${p.name}<span class="sw">${['ink','gold','red','blue','purple'].map(k=>`<i style="background:${p.c[k]}"></i>`).join('')}</span></button>`).join('');
+  $('d-cols').innerHTML=S.SLOTS.map(([k,n,d])=>`<label><input type="color" data-c="${k}" value="${st.c[k]}"><span>${n}<small>${d}</small></span></label>`).join('');
+  const opt=sel=>S.FONTS.map(f=>`<option ${f.n===sel?'selected':''}>${f.n}</option>`).join('');
+  $('d-head').innerHTML=opt(st.head);$('d-body').innerHTML=opt(st.body);
+  $('d-hp').style.fontFamily='var(--font-head)';
+}
+function wireDrawer(){
+  $('btn-style').onclick=()=>$('drawer').classList.toggle('open');$('d-close').onclick=()=>$('drawer').classList.remove('open');
+  $('d-pre').onclick=e=>{const b=e.target.closest('button[data-p]');if(!b)return;S.setPreset(b.dataset.p);buildDrawer();restyle()};
+  $('d-cols').addEventListener('input',e=>{const k=e.target.dataset.c;if(!k)return;S.setColor(k,e.target.value);document.querySelectorAll('#d-pre button').forEach(b=>b.classList.remove('on'));restyle()});
+  $('d-head').onchange=e=>{S.setFont('head',e.target.value);restyle()};
+  $('d-body').onchange=e=>{S.setFont('body',e.target.value);restyle()};
+  $('d-reset').onclick=()=>{S.reset();buildDrawer();restyle()};
+}
+
+/* ---------- boot ---------- */
+S.apply();buildDrawer();wireDrawer();wireCard();
+$('btn-print').onclick=()=>{document.querySelectorAll('details.more').forEach(d=>d.open=true);setTimeout(()=>window.print(),400)};
+$('btn-save').onclick=downloadReport;
+if(REPORT){
+  // Opened from a saved report: show the stored results, no upload step.
+  document.title='My LinkedIn data, visualized';
+  $('hero').innerHTML=`<span class="kick">LinkedIn data export</span><h1>My LinkedIn data, visualized</h1><p class="intro">Generated ${REPORT.generated} from a LinkedIn data export. Charts are interactive: hover for details, drag the network maps, and use <b>Colors &amp; fonts</b> to restyle the report.</p><p class="priv"><b>Privacy.</b> This file holds only summary results: counts, categories and organization names. It contains no names of people and no message text.</p>`;
+  RES=REPORT.sections.map(s=>({key:s.key,fn:MAP[s.key],res:s.res}));NOTES=REPORT.notes||[];OV=REPORT.overview;
+  $('s-ai').remove();
+  renderAll();showLoaded(REPORT.overview,REPORT.missing||[]);$('btn-print').style.display='';
+}else{
+  buildPrompts();
+  $('btn-zip').onclick=()=>$('in-files').click();$('btn-folder').onclick=()=>$('in-folder').click();
+  $('in-files').onchange=e=>handleList(e.target.files);$('in-folder').onchange=e=>handleList(e.target.files);
+  $('btn-sample').onclick=()=>{status('');run(L.sample.files())};
+  const dz=$('drop');
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over')}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over')}));
+  dz.addEventListener('drop',e=>handleDrop(e.dataTransfer));
+  window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{if(!dz.contains(e.target)){e.preventDefault();handleDrop(e.dataTransfer)}});
+  if(/[?&]sample/.test(location.search))run(L.sample.files());
+}
+window.LDVapp={run,buildReportHTML,downloadKit,claudeMd,startHere};
+})();
+
+</script>
+</body></html>
