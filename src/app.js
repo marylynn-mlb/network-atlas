@@ -89,6 +89,7 @@ async function downloadKit(){
   PROMPTS.forEach((p,i)=>z.file(`prompts/${String(i+1).padStart(2,'0')}-${p[0]}.md`,`# ${p[1]}${p[4]?' (private)':''}\n\n${p[3]}${prel(p)}\n\nSave the result as output/${p[4]?'PRIVATE-':''}${String(i+1).padStart(2,'0')}-${p[0]}.html\n`));
   save(await z.generateAsync({type:'blob'}),'linkedin-ai-starter-kit.zip');
 }
+function localDate(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 function buildPrompts(){
   $('ai-grid').innerHTML=PROMPTS.map((p,i)=>`<div class="pl"><div class="pl-h"><div><b>${i+1}. ${p[1]}${p[4]?' <span class="tag">private</span>':''}</b><span>${p[2]}</span></div><button class="btn mini" data-i="${i}">Copy</button></div><details><summary>View prompt</summary><pre id="pr-${i}"></pre></details></div>`).join('');
@@ -115,7 +116,7 @@ async function buildReportHTML(){
 }
 async function downloadReport(){
   const b=$('btn-save'),t=b.textContent;b.textContent='Building…';b.disabled=true;
-  try{const html=await buildReportHTML();save(new Blob([html],{type:'text/html'}),'linkedin-report-'+new Date().toISOString().slice(0,10)+'.html')}
+  try{const html=await buildReportHTML();save(new Blob([html],{type:'text/html'}),'network-atlas-'+localDate()+'.html')}
   catch(e){alert('Could not build the report file: '+e.message)}
   b.textContent=t;b.disabled=false;
 }
@@ -185,7 +186,7 @@ function compute(D){
 function missingFiles(D){return ['Messages','Invitations','Shares','Positions'].filter(k=>!D.found[k.toLowerCase()]).map(k=>k+'.csv')}
 function showLoaded(ov,missing){
   $('loaded').style.display='';
-  $('loaded').innerHTML=`<div class="box"><b>${REPORT?'Report':'Loaded'}</b><span>${ov.connections.toLocaleString()} connections</span><span>${ov.messages.toLocaleString()} messages</span><span>${ov.posts} posts</span><span>${ov.invitations} invitations</span><span>latest activity in export: ${ov.now}</span>${(missing.length||NOTES.length)?`<span class="miss">${missing.length?'Not found: '+missing.join(', ')+'. ':''}${NOTES.length?'Skipped: '+NOTES.join(' '):''}</span>`:''}</div>`;
+  $('loaded').innerHTML=`${REPORT?'':'<div class="savebar"><b>Save your report before you leave.</b> Nothing on this page is stored: if you close it, refresh it or the app is updated, your results disappear. <button class="btn pri" id="btn-save2">Save report (.html)</button></div>'}<div class="box"><b>${REPORT?'Report':'Loaded'}</b><span>${ov.connections.toLocaleString()} connections</span><span>${ov.messages.toLocaleString()} messages</span><span>${ov.posts} posts</span><span>${ov.invitations} invitations</span><span>latest activity in export: ${ov.now}</span>${(missing.length||NOTES.length)?`<span class="miss">${missing.length?'Not found: '+missing.join(', ')+'. ':''}${NOTES.length?'Skipped: '+NOTES.join(' '):''}</span>`:''}</div>`;
 }
 function run(files){
   const names=Object.keys(files);
@@ -195,7 +196,7 @@ function run(files){
   DATA=D;OV=L.an.overview(D);const c=compute(D);RES=c.out;NOTES=c.notes;status('');
   renderAll();
   showLoaded(L.an.overview(D),missingFiles(D));
-  $('btn-print').style.display='';$('btn-save').style.display='';
+  $('btn-save').style.display='';
   setTimeout(()=>$('loaded').scrollIntoView({behavior:'smooth'}),50);
 }
 function renderAll(){
@@ -266,15 +267,14 @@ function wireDrawer(){
 
 /* ---------- boot ---------- */
 S.apply();buildDrawer();wireDrawer();wireCard();
-$('btn-print').onclick=()=>{document.querySelectorAll('details.more').forEach(d=>d.open=true);setTimeout(()=>window.print(),400)};
-$('btn-save').onclick=downloadReport;
+$('btn-save').onclick=downloadReport;document.addEventListener('click',e=>{if(e.target.id==='btn-save2')downloadReport()});
 if(REPORT){
   // Opened from a saved report: show the stored results, no upload step.
   document.title='My LinkedIn data, visualized';
-  $('hero').innerHTML=`<span class="kick">LinkedIn data export</span><h1>My LinkedIn data, visualized</h1><p class="intro">Generated ${REPORT.generated} from a LinkedIn data export. Charts are interactive: hover for details, drag the network maps, and use <b>Colors &amp; fonts</b> to restyle the report.</p><p class="priv"><b>Privacy.</b> This file holds only summary results: counts, categories and organization names. It contains no names of people and no message text.</p>`;
+  $('hero').innerHTML=`<span class="kick">LinkedIn data export</span><h1>My LinkedIn data, visualized</h1><p class="intro">Generated ${REPORT.generated} from a LinkedIn data export. Charts are interactive: hover for details, drag the network maps, and use <b>Colors &amp; fonts</b> to restyle the report. The AI starter kit is not included in this file; it lives in the <a href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener">Network Atlas app</a>.</p><p class="priv"><b>Privacy.</b> This file holds only summary results: counts, categories and organization names. It contains no names of people and no message text.</p>`;
   RES=REPORT.sections.map(s=>({key:s.key,fn:MAP[s.key],res:s.res}));NOTES=REPORT.notes||[];OV=REPORT.overview;
   $('s-ai').remove();
-  renderAll();showLoaded(REPORT.overview,REPORT.missing||[]);$('btn-print').style.display='';
+  renderAll();showLoaded(REPORT.overview,REPORT.missing||[]);
 }else{
   buildPrompts();
   $('btn-zip').onclick=()=>$('in-files').click();$('btn-folder').onclick=()=>$('in-folder').click();

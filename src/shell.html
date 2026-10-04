@@ -13,7 +13,7 @@
  <div class="brandbox"><b class="brand">Network Atlas</b><small>for your LinkedIn export</small></div>
  <div class="navbox" id="navbox"><div class="navrow" id="nav-an"></div><div class="navrow" id="nav-rec"></div></div>
  <span class="sp"></span>
- <div class="actions"><div class="arow"><button class="btn pri" id="btn-save" style="display:none">Save report</button><button class="btn" id="btn-print" style="display:none">Print</button></div><div class="arow"><button class="btn" id="btn-style">Colors &amp; fonts</button></div></div>
+ <div class="actions"><div class="arow"><button class="btn pri" id="btn-save" style="display:none" title="Download your results as an HTML file">Save report (.html)</button></div><div class="arow"><button class="btn" id="btn-style">Colors &amp; fonts</button></div></div>
 </div></div>
 
 <div class="hero" id="hero">
@@ -67,7 +67,8 @@
   <div><h4>How to use it</h4><ul>
    <li>Drop in your LinkedIn export (the .zip, the unzipped folder, or the CSV files).</li>
    <li>Your browser&rsquo;s own file reader opens the files and everything is analyzed in memory on your device. Nothing is uploaded or stored.</li>
-   <li>Restyle it with Colors &amp; fonts, save your summary card as an image, or save the whole report as a file you can keep or share.</li>
+   <li>Restyle it with Colors &amp; fonts, save your summary card as an image, or save the whole report as an HTML file you can keep or share.</li>
+   <li><b>Save your report before you leave.</b> This page stores nothing, so your results exist only while it is open. If you close the tab, refresh it, or the app is updated behind the scenes, they are gone and you would need to drop your export in again. <i>Save report (.html)</i> downloads a self-contained file named like <i>network-atlas-2026-10-04.html</i>. It opens in any browser, works offline because it carries its own copy of the chart libraries, and keeps looking the way it did when you saved it, even if the app changes later. It is a snapshot, so it doesn&rsquo;t update. It holds counts, categories and organization names, but no names of people and no message text. The AI starter kit stays in the app and is not part of the file.</li>
    <li>The sample data is made up, so you can look around first.</li></ul></div>
   <div><h4>How it is built</h4><ul>
    <li>Charts use Chart.js and network graphs use D3.js. The zip is opened with JSZip.</li>

@@ -240,3 +240,5 @@ body.report .drop,body.report .steps{display:none}
 .net-hint{font-size:12px;color:var(--grey);margin:8px 0 0}
 .glossy{font-size:12.5px}
 #results:has(>.part.p2:last-child)+.sec{border-top:0}
+
+.savebar{border-left:8px solid var(--gold);background:var(--tint);padding:10px 14px;font-size:13.5px;margin-bottom:12px;display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center}.savebar b{font-weight:900}
