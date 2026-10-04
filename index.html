@@ -912,7 +912,7 @@ function section(num,data,opts){
   const strip=t?`<div class="wk-strip">
     <div class="wk-bar"><i style="flex:${Math.max(t.close,1)};background:var(--blue)"></i><i style="flex:${Math.max(t.dormant,1)};background:var(--gold)"></i><i style="flex:${Math.max(t.weak,1)};background:var(--soft2,var(--beige))"></i></div>
     <div class="wk-legend"><div><b>${fmt(t.close)}</b><span>Close ties</span><small>conversations in the last year</small></div><div><b>${fmt(t.dormant)}</b><span>Dormant ties</span><small>you had a conversation, but not lately</small></div><div><b>${fmt(t.weak)}</b><span>Weak ties</span><small>connected, with little or no conversation</small></div></div></div>`:'';
-  const aiLink=opts.report?'':`<div class="rec-ai"><b>Want a plan with names?</b> The starter kit in the next section includes private prompts that build your reconnection list, a weak-ties map and drafts of hello messages, all on your own computer. <a href="#s-ai">Go to the starter kit</a></div>`;
+  const aiLink=opts.report?`<div class="rec-ai"><b>Want a plan with names?</b> The Network Atlas app has a starter kit with private prompts that build your reconnection list, a weak-ties map and drafts of hello messages. <a href="#s-ai">About the starter kit</a></div>`:`<div class="rec-ai"><b>Want a plan with names?</b> The starter kit in the next section includes private prompts that build your reconnection list, a weak-ties map and drafts of hello messages. They need an AI assistant, so read the privacy note there first. <a href="#s-ai">Go to the starter kit</a></div>`;
   return `<section class="sec rc" id="s-recs"><div class="sh"><span class="num">${num}</span><div><h2>${data.picks.length===1?'One move':'Three moves'} to strengthen your network</h2><p class="sub">Picked from your own numbers above. Each one is built around weak ties: the acquaintances and old contacts who connect you to people and information you don’t already have.</p></div></div>
    <div class="wk-box"><h3>Why weak ties?</h3><p>In 1973 the sociologist Mark Granovetter found that people more often hear about jobs and ideas from acquaintances than from close friends, because close friends know the same things you do. A 2022 experiment on about 20 million LinkedIn users reached a similar answer: moderately weak ties, neither the closest nor the most distant, were the most helpful for finding jobs.</p>${strip}</div>
    <div class="recs">${data.picks.map((r,i)=>recHtml(r,i+1)).join('')}</div>
@@ -1579,7 +1579,7 @@ function renderAll(){
   const link=(s,i,t)=>`<a class="nl" href="#${s}" title="${t}">${i}</a>`;
   $('nav-an').innerHTML='<span class="nlab">Analysis</span>'+an.map((s,i)=>link(s.id,'1.'+String(i+1).padStart(2,'0'),(s.querySelector('h2')||{}).textContent||'')).join('');
   let rl=rec.map((s,i)=>link(s.id,'2.'+String(i+1).padStart(2,'0'),'Recommendations')).join('');
-  if(!REPORT){const ai=$('s-ai');ai.style.display='';$('ai-num').textContent='2.'+String(rn+1).padStart(2,'0');rl+=link('s-ai','2.'+String(rn+1).padStart(2,'0'),'Go deeper with your own AI')}
+  {const ai=$('s-ai');ai.style.display='';$('ai-num').textContent='2.'+String(rn+1).padStart(2,'0');rl+=link('s-ai','2.'+String(rn+1).padStart(2,'0'),'Go deeper with your own AI')}
   $('nav-rec').innerHTML=rl?'<span class="nlab">Recommendations</span>'+rl:'';
 }
 
@@ -1634,7 +1634,9 @@ if(REPORT){
   document.title='My LinkedIn data, visualized';
   $('hero').innerHTML=`<span class="kick">LinkedIn data export</span><h1>My LinkedIn data, visualized</h1><p class="intro">Generated ${REPORT.generated} from a LinkedIn data export. Charts are interactive: hover for details, drag the network maps, and use <b>Colors &amp; fonts</b> to restyle the report. The AI starter kit is not included in this file; it lives in the <a href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener">Network Atlas app</a>.</p><p class="priv"><b>Privacy.</b> This file holds only summary results: counts, categories and organization names. It contains no names of people and no message text.</p>`;
   RES=REPORT.sections.map(s=>({key:s.key,fn:MAP[s.key],res:s.res}));NOTES=REPORT.notes||[];OV=REPORT.overview;
-  $('s-ai').remove();
+  $('s-ai').innerHTML=`<div class="sh"><span class="num" id="ai-num">2.02</span><div><h2>Go deeper with your own AI</h2><p class="sub">Some questions need judgment that rules can&rsquo;t supply: reading messages, grouping companies, interpreting what LinkedIn inferred, and turning your results into a plan with names. The Network Atlas app has a starter kit for that.</p></div></div>
+ <div class="kit"><div class="kit-main"><h3>The starter kit lives in the app</h3><p>It is one download with standing instructions that keep other people&rsquo;s names out of the results and match your colors and fonts, plus ten ready-made prompts: six that dig deeper and four that turn your results into an action plan, including a reconnection list and hello drafts. It is not part of this saved file.</p><a class="btn pri" href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Open Network Atlas</a></div>
+ <ol class="kit-steps"><li><b>Open the app</b> and drop your LinkedIn export in again.</li><li><b>Download the starter kit</b> from section 2.02 and unzip it next to your export.</li><li><b>Read the privacy note</b> there before you point an AI assistant at your files.</li></ol></div>`;
   renderAll();showLoaded(REPORT.overview,REPORT.missing||[]);
 }else{
   buildPrompts();

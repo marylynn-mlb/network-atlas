@@ -218,7 +218,7 @@ function renderAll(){
   const link=(s,i,t)=>`<a class="nl" href="#${s}" title="${t}">${i}</a>`;
   $('nav-an').innerHTML='<span class="nlab">Analysis</span>'+an.map((s,i)=>link(s.id,'1.'+String(i+1).padStart(2,'0'),(s.querySelector('h2')||{}).textContent||'')).join('');
   let rl=rec.map((s,i)=>link(s.id,'2.'+String(i+1).padStart(2,'0'),'Recommendations')).join('');
-  if(!REPORT){const ai=$('s-ai');ai.style.display='';$('ai-num').textContent='2.'+String(rn+1).padStart(2,'0');rl+=link('s-ai','2.'+String(rn+1).padStart(2,'0'),'Go deeper with your own AI')}
+  {const ai=$('s-ai');ai.style.display='';$('ai-num').textContent='2.'+String(rn+1).padStart(2,'0');rl+=link('s-ai','2.'+String(rn+1).padStart(2,'0'),'Go deeper with your own AI')}
   $('nav-rec').innerHTML=rl?'<span class="nlab">Recommendations</span>'+rl:'';
 }
 
@@ -273,7 +273,9 @@ if(REPORT){
   document.title='My LinkedIn data, visualized';
   $('hero').innerHTML=`<span class="kick">LinkedIn data export</span><h1>My LinkedIn data, visualized</h1><p class="intro">Generated ${REPORT.generated} from a LinkedIn data export. Charts are interactive: hover for details, drag the network maps, and use <b>Colors &amp; fonts</b> to restyle the report. The AI starter kit is not included in this file; it lives in the <a href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener">Network Atlas app</a>.</p><p class="priv"><b>Privacy.</b> This file holds only summary results: counts, categories and organization names. It contains no names of people and no message text.</p>`;
   RES=REPORT.sections.map(s=>({key:s.key,fn:MAP[s.key],res:s.res}));NOTES=REPORT.notes||[];OV=REPORT.overview;
-  $('s-ai').remove();
+  $('s-ai').innerHTML=`<div class="sh"><span class="num" id="ai-num">2.02</span><div><h2>Go deeper with your own AI</h2><p class="sub">Some questions need judgment that rules can&rsquo;t supply: reading messages, grouping companies, interpreting what LinkedIn inferred, and turning your results into a plan with names. The Network Atlas app has a starter kit for that.</p></div></div>
+ <div class="kit"><div class="kit-main"><h3>The starter kit lives in the app</h3><p>It is one download with standing instructions that keep other people&rsquo;s names out of the results and match your colors and fonts, plus ten ready-made prompts: six that dig deeper and four that turn your results into an action plan, including a reconnection list and hello drafts. It is not part of this saved file.</p><a class="btn pri" href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Open Network Atlas</a></div>
+ <ol class="kit-steps"><li><b>Open the app</b> and drop your LinkedIn export in again.</li><li><b>Download the starter kit</b> from section 2.02 and unzip it next to your export.</li><li><b>Read the privacy note</b> there before you point an AI assistant at your files.</li></ol></div>`;
   renderAll();showLoaded(REPORT.overview,REPORT.missing||[]);
 }else{
   buildPrompts();
