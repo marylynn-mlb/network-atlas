@@ -1456,7 +1456,7 @@ function buildPrompts(){
   $('ai-grid').innerHTML=PROMPTS.map((p,i)=>`<div class="pl"><div class="pl-h"><div><b>${i+1}. ${p[1]}${p[4]?' <span class="tag">private</span>':''}</b><span>${p[2]}</span></div><button class="btn mini" data-i="${i}">Copy</button></div><details><summary>View prompt</summary><pre id="pr-${i}"></pre></details></div>`).join('');
   PROMPTS.forEach((p,i)=>{$('pr-'+i).textContent=p[3]+prel(p)});
   $('ai-grid').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(!b)return;const t=PROMPTS[+b.dataset.i][3]+prel(PROMPTS[+b.dataset.i]);(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent='Copied!'},()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');b.textContent='Copied!'}catch(x){b.textContent='Copy failed'}ta.remove()});setTimeout(()=>b.textContent='Copy',1800)});
-  $('btn-kit').onclick=downloadKit;
+  if($('btn-kit'))$('btn-kit').onclick=downloadKit;
 }
 
 /* ---------- standalone report (.html) ---------- */
@@ -1634,9 +1634,10 @@ if(REPORT){
   document.title='My LinkedIn data, visualized';
   $('hero').innerHTML=`<span class="kick">LinkedIn data export</span><h1>My LinkedIn data, visualized</h1><p class="intro">Generated ${REPORT.generated} from a LinkedIn data export. Charts are interactive: hover for details, drag the network maps, and use <b>Colors &amp; fonts</b> to restyle the report. The AI starter kit is not included in this file; it lives in the <a href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener">Network Atlas app</a>.</p><p class="priv"><b>Privacy.</b> This file holds only summary results: counts, categories and organization names. It contains no names of people and no message text.</p>`;
   RES=REPORT.sections.map(s=>({key:s.key,fn:MAP[s.key],res:s.res}));NOTES=REPORT.notes||[];OV=REPORT.overview;
-  $('s-ai').innerHTML=`<div class="sh"><span class="num" id="ai-num">2.02</span><div><h2>Go deeper with your own AI</h2><p class="sub">Some questions need judgment that rules can&rsquo;t supply: reading messages, grouping companies, interpreting what LinkedIn inferred, and turning your results into a plan with names. The Network Atlas app has a starter kit for that.</p></div></div>
- <div class="kit"><div class="kit-main"><h3>The starter kit lives in the app</h3><p>It is one download with standing instructions that keep other people&rsquo;s names out of the results and match your colors and fonts, plus ten ready-made prompts: six that dig deeper and four that turn your results into an action plan, including a reconnection list and hello drafts. It is not part of this saved file.</p><a class="btn pri" href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Open Network Atlas</a></div>
- <ol class="kit-steps"><li><b>Open the app</b> and drop your LinkedIn export in again.</li><li><b>Download the starter kit</b> from section 2.02 and unzip it next to your export.</li><li><b>Read the privacy note</b> there before you point an AI assistant at your files.</li></ol></div>`;
+  // The saved file keeps the AI section and prompt list, but the kit download itself stays in the app.
+  buildPrompts();
+  const kb=$('btn-kit');kb.outerHTML='<a class="btn pri" href="https://marylynn-mlb.github.io/network-atlas/" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Get the kit in the Network Atlas app</a>';
+  document.querySelector('#s-ai .kit-main p').insertAdjacentHTML('beforeend',' The download itself lives in the app, not in this saved file. You can still copy any prompt below.');
   renderAll();showLoaded(REPORT.overview,REPORT.missing||[]);
 }else{
   buildPrompts();
