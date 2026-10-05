@@ -251,6 +251,8 @@ body.report .drop,body.report .steps{display:none}
 #results:has(>.part.p2:last-child)+.sec{border-top:0}
 
 .savebar{border-left:8px solid var(--gold);background:var(--tint);padding:10px 14px;font-size:13.5px;margin-bottom:12px;display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center}.savebar b{font-weight:900}
+
+.priv.exp{border-left-color:var(--blue);margin-top:-10px}
 </style>
 </head><body>
 <div class="top"><div class="in">
@@ -265,6 +267,7 @@ body.report .drop,body.report .steps{display:none}
  <h1>Visualize your LinkedIn data</h1>
  <p class="intro">You've spent years building a LinkedIn network, but the site only shows you a list of names. Your data export holds the real story: who found you, who you actually talk to, and how your network grew with each job. Drop it here to see it.</p>
  <p class="priv"><b>Your data never leaves this page.</b> Everything is read and analyzed on your own computer. Nothing is uploaded, stored or sent anywhere. Your private messages are never read, only dates and senders. Your own posts and comments are scanned on your computer to count topic words. Results show counts and categories, never other people's names.</p>
+ <p class="priv exp"><b>This is an experiment.</b> Network Atlas is a personal side project, so it&rsquo;s offered as is, with no support and no promises. So far it has been tested only with one real LinkedIn export and some made-up sample data, so it may break, miss things or get things wrong with yours. Treat the numbers as a rough guide. <a href="#feedback">Feedback is welcome</a>, but I may not act on it.</p>
  <div class="drop" id="drop">
   <h3>Drop your LinkedIn export here</h3>
   <p>The .zip file, the unzipped folder, or the CSV files themselves.</p>
@@ -320,6 +323,8 @@ body.report .drop,body.report .steps{display:none}
    <li>Relationship tiers come from message dates and senders only. Message text is never read.</li>
    <li>The only things loaded from the internet are the chart libraries and fonts, never your data.</li></ul></div>
  </div>
+ <h3 id="feedback">Experiment and feedback</h3>
+ <p>Network Atlas is an experiment, not a finished product. It has been tested with one real export and some sample data, so results may be wrong or incomplete for yours, and it is provided as is, with no warranty or support. Notes and ideas are welcome and I read them, but I may not act on them or reply. The simplest way is to <a href="https://github.com/marylynn-mlb/network-atlas/issues/new" target="_blank" rel="noopener">open an issue on GitHub</a> (you&rsquo;ll need a free GitHub account). Please don&rsquo;t include your LinkedIn data, screenshots with other people&rsquo;s names, or anything private; describing what you saw is perfect.</p>
  <h3>License</h3>
  <p>Free for noncommercial use. You may use, change and share Network Atlas, keeping the credit below, but not sell it or charge for it. Licensed under the <a href="https://polyformproject.org/licenses/noncommercial/1.0.0" target="_blank" rel="noopener">PolyForm Noncommercial License 1.0.0</a>. The reports you make with it are yours.</p>
  <h3>Credit</h3>

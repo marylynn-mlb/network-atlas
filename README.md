@@ -33,3 +33,7 @@ Network Atlas loads these libraries and fonts. They keep their own licenses, whi
 - [D3.js](https://d3js.org/) (ISC)
 - [JSZip](https://stuk.github.io/jszip/) (MIT or GPL-3.0; used under MIT)
 - Fonts from [Google Fonts](https://fonts.google.com/), such as Inter, under the SIL Open Font License or the Apache License
+
+## Status and feedback
+
+Network Atlas is an experiment. It has been tested with one real LinkedIn export and some made-up sample data, so it may not work as you expect with yours. It is provided as is, with no support or warranty. Feedback is welcome as a [GitHub issue](https://github.com/marylynn-mlb/network-atlas/issues/new), but I may not act on it. Please don't include your LinkedIn data or other people's names.

@@ -242,3 +242,5 @@ body.report .drop,body.report .steps{display:none}
 #results:has(>.part.p2:last-child)+.sec{border-top:0}
 
 .savebar{border-left:8px solid var(--gold);background:var(--tint);padding:10px 14px;font-size:13.5px;margin-bottom:12px;display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center}.savebar b{font-weight:900}
+
+.priv.exp{border-left-color:var(--blue);margin-top:-10px}
