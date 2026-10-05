@@ -10,3 +10,7 @@ for p in order: assert '</script' not in rd(p).lower(), p
 out=shell.replace('/*@CSS*/',rd('app.css')).replace('/*@SCRIPTS*/',scripts)
 open(os.path.join(here,'index.html'),'w',encoding='utf-8').write(out)
 print('built index.html',len(out),'bytes')
+
+about=rd('about.html').replace('/*@CSS*/',rd('app.css'))
+open(os.path.join(here,'about.html'),'w',encoding='utf-8').write(about)
+print('built about.html',len(about),'bytes')

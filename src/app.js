@@ -111,6 +111,7 @@ async function buildReportHTML(){
     try{const r=await fetch(m[1]);if(!r.ok)throw 0;const t=await r.text();if(/<\/script/i.test(t))throw 0;html=html.replace(m[0],()=>'<script>'+t+SC_END)}catch(e){}
   }
   html=html.replace('<script id="src-lib-csv">',()=>'<script>window.__REPORT__='+json(rep)+';window.__STYLE__='+json(S.get())+';'+SC_END+'\n<script id="src-lib-csv">');
+  html=html.replace(/href="about\.html/g,'href="https://marylynn-mlb.github.io/network-atlas/about.html');
   html=html.replace(/<title>[^<]*<\/title>/,'<title>My LinkedIn data, visualized</title>').replace('<body>','<body class="report">');
   return html;
 }

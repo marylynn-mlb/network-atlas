@@ -21,7 +21,7 @@
  <h1>Visualize your LinkedIn data</h1>
  <p class="intro">You've spent years building a LinkedIn network, but the site only shows you a list of names. Your data export holds the real story: who found you, who you actually talk to, and how your network grew with each job. Drop it here to see it.</p>
  <p class="priv"><b>Your data never leaves this page.</b> Everything is read and analyzed on your own computer. Nothing is uploaded, stored or sent anywhere. Your private messages are never read, only dates and senders. Your own posts and comments are scanned on your computer to count topic words. Results show counts and categories, never other people's names.</p>
- <p class="priv exp"><b>This is an experiment.</b> Network Atlas is a personal side project, so it&rsquo;s offered as is, with no support and no promises. So far it has been tested only with one real LinkedIn export and some made-up sample data, so it may break, miss things or get things wrong with yours. Treat the numbers as a rough guide. <a href="#feedback">Feedback is welcome</a>, but I may not act on it.</p>
+ <p class="priv exp"><b>This is an experiment.</b> Network Atlas is a personal side project, so it&rsquo;s offered as is, with no support and no promises. <a href="about.html#feedback">See more about what that means.</a></p>
  <div class="drop" id="drop">
   <h3>Drop your LinkedIn export here</h3>
   <p>The .zip file, the unzipped folder, or the CSV files themselves.</p>
@@ -61,28 +61,9 @@
  <p class="src" style="margin-top:14px">Chat-only assistants cannot read large CSV files. If you use one, paste only small anonymized samples, never other people's messages. Check any AI tool's data policy first: unlike this page, an AI service processes whatever you give it.</p>
 </section>
 
-<footer>
- <h3>How this works</h3>
- <p>This page is a single static web page that you open in your browser, and it runs only on your computer. It isn&rsquo;t hosted anywhere and has no server: the file you opened is the whole app.</p>
- <div class="how2">
-  <div><h4>How to use it</h4><ul>
-   <li>Drop in your LinkedIn export (the .zip, the unzipped folder, or the CSV files).</li>
-   <li>Your browser&rsquo;s own file reader opens the files and everything is analyzed in memory on your device. Nothing is uploaded or stored.</li>
-   <li>Restyle it with Colors &amp; fonts, save your summary card as an image, or save the whole report as an HTML file you can keep or share.</li>
-   <li><b>Save your report before you leave.</b> This page stores nothing, so your results exist only while it is open. If you close the tab, refresh it, or the app is updated behind the scenes, they are gone and you would need to drop your export in again. <i>Save report (.html)</i> downloads a self-contained file named like <i>network-atlas-2026-10-04.html</i>. It opens in any browser, works offline because it carries its own copy of the chart libraries, and keeps looking the way it did when you saved it, even if the app changes later. It is a snapshot, so it doesn&rsquo;t update. It holds counts, categories and organization names, but no names of people and no message text. The AI starter kit stays in the app and is not part of the file.</li>
-   <li>The sample data is made up, so you can look around first.</li></ul></div>
-  <div><h4>How it is built</h4><ul>
-   <li>Charts use Chart.js and network graphs use D3.js. The zip is opened with JSZip.</li>
-   <li>The analysis is plain JavaScript. Industries are assigned by simple keyword rules, so treat them as approximate.</li>
-   <li>Relationship tiers come from message dates and senders only. Message text is never read.</li>
-   <li>The only things loaded from the internet are the chart libraries and fonts, never your data.</li></ul></div>
- </div>
- <h3 id="feedback">Experiment and feedback</h3>
- <p>Network Atlas is an experiment, not a finished product. It has been tested with one real export and some sample data, so results may be wrong or incomplete for yours, and it is provided as is, with no warranty or support. Notes and ideas are welcome and I read them, but I may not act on them or reply. The simplest way is to <a href="https://github.com/marylynn-mlb/network-atlas/issues/new" target="_blank" rel="noopener">open an issue on GitHub</a> (you&rsquo;ll need a free GitHub account). Please don&rsquo;t include your LinkedIn data, screenshots with other people&rsquo;s names, or anything private; describing what you saw is perfect.</p>
- <h3>License</h3>
- <p>Free for noncommercial use. You may use, change and share Network Atlas, keeping the credit below, but not sell it or charge for it. Licensed under the <a href="https://polyformproject.org/licenses/noncommercial/1.0.0" target="_blank" rel="noopener">PolyForm Noncommercial License 1.0.0</a>. The reports you make with it are yours.</p>
- <h3>Credit</h3>
- <p>Network Atlas was built by <a href="https://www.linkedin.com/in/marylynn" target="_blank" rel="noopener">Mary-Lynn Bragg</a> with Claude Code. The idea and format are adapted from <a href="https://loganhc-09.github.io/LinkedIn-Data-Export-Visualization/" target="_blank" rel="noopener"><i>Visualize Your LinkedIn Data Export</i></a> by Logan Currie, also built with Claude Code.</p>
+<footer class="slim">
+ <p><b>Network Atlas is an experiment.</b> Limited testing, provided as is, with no warranty or support. <a href="about.html#feedback">More about this project, how it works, and feedback</a>.</p>
+ <p>Free for noncommercial use under the <a href="https://polyformproject.org/licenses/noncommercial/1.0.0" target="_blank" rel="noopener">PolyForm Noncommercial License 1.0.0</a>. Built by <a href="https://www.linkedin.com/in/marylynn" target="_blank" rel="noopener">Mary-Lynn Bragg</a> with Claude Code. The idea and format are adapted from <a href="https://loganhc-09.github.io/LinkedIn-Data-Export-Visualization/" target="_blank" rel="noopener"><i>Visualize Your LinkedIn Data Export</i></a> by Logan Currie.</p>
 </footer>
 
 <aside id="drawer" aria-label="Colors and fonts"><button class="btn" id="d-close" style="float:right">Close</button>
