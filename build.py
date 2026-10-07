@@ -4,8 +4,7 @@ import os
 here=os.path.dirname(os.path.abspath(__file__))
 rd=lambda p:open(os.path.join(here,'src',p),encoding='utf-8').read()
 import re
-def logo_svg():
-    s=open(os.path.join(here,'logo','network-atlas-lockup-transparent.svg'),encoding='utf-8').read()
+def recolor(s):
     m={'#062a30':'var(--green)','#cca300':'var(--gold)','#ed4319':'var(--red)','#8b8d92':'var(--grey)'}
     def tag(t):
         st=[]
@@ -17,14 +16,19 @@ def logo_svg():
         if st:
             t=re.sub(r'(\s*/?>)$',' style="%s"\\1'%';'.join(st),t,1)
         return t
-    s=re.sub(r'<(?:circle|line|path|ellipse)\b[^>]*>',lambda mm:tag(mm.group(0)),s)
-    s=re.sub(r'viewBox="[^"]*" width="[^"]*" height="[^"]*"','viewBox="38 30 780 146" class="logo-svg" focusable="false"',s,1)
-    return s
+    return re.sub(r'<(?:circle|line|path|ellipse)\b[^>]*>',lambda mm:tag(mm.group(0)),s)
+def logo_svg():
+    s=recolor(open(os.path.join(here,'logo','network-atlas-lockup-transparent.svg'),encoding='utf-8').read())
+    return re.sub(r'viewBox="[^"]*" width="[^"]*" height="[^"]*"','viewBox="38 30 780 146" class="logo-svg" focusable="false"',s,1)
+def icon_svg():
+    s=recolor(open(os.path.join(here,'logo','network-atlas-transparent.svg'),encoding='utf-8').read())
+    return re.sub(r'viewBox="[^"]*" width="[^"]*" height="[^"]*"','viewBox="18 18 220 220" class="icon-svg" focusable="false"',s,1)
+ICON=icon_svg()
 LOGO=logo_svg()
 import urllib.parse
 _fav=open(os.path.join(here,'logo','network-atlas-dark.svg'),encoding='utf-8').read().replace('\n','')
 FAV='<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%s">\n<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">\n<link rel="apple-touch-icon" href="apple-touch-icon.png">'%urllib.parse.quote(_fav,safe="/:=' ")
-shell=rd('shell.html').replace('/*@LOGO*/',LOGO).replace('<!--@FAVICON-->',FAV)
+shell=rd('shell.html').replace('/*@LOGO*/',LOGO).replace('/*@ICON*/',ICON).replace('<!--@FAVICON-->',FAV)
 order=['lib/csv.js','lib/data.js','lib/analysis.js','lib/style.js','lib/sample.js','lib/recs.js','lib/render.js','lib/cards.js','app.js']
 scripts='\n'.join('<script id="src-%s">\n%s\n</script>'%(p.replace('/','-').replace('.js',''),rd(p)) for p in order)
 for p in order: assert '</script' not in rd(p).lower(), p

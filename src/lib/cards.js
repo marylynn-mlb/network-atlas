@@ -66,16 +66,20 @@ function setup(ctx,P){return {head:(w,s)=>`${w} ${s}px ${P.headFam}`,body:(w,s)=
 function fitText(ctx,str,maxW,fontFn,size,min){let s=size;ctx.font=fontFn(s);while(ctx.measureText(str).width>maxW&&s>(min||20)){s-=2;ctx.font=fontFn(s)}return s}
 function wrapLines(ctx,text,maxW){const w=text.split(' '),L=[];let c='';w.forEach(x=>{const t=c?c+' '+x:x;if(ctx.measureText(t).width>maxW&&c){L.push(c);c=x}else c=t});if(c)L.push(c);return L}
 function T(ctx,str,x,y,font,color,align){ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align||'left';ctx.textBaseline='alphabetic';ctx.fillText(str,x,y)}
-function compass(ctx,cx,cy,r,color,hole){
-  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=r*0.2;ctx.beginPath();ctx.arc(cx,cy,r*0.83,0,7);ctx.stroke();
-  const k=r/24;ctx.beginPath();ctx.moveTo(cx+9*k,cy-9*k);ctx.lineTo(cx+3.5*k,cy+3.5*k);ctx.lineTo(cx-9*k,cy+9*k);ctx.lineTo(cx-3.5*k,cy-3.5*k);ctx.closePath();ctx.fill();
-  ctx.fillStyle=hole;ctx.beginPath();ctx.arc(cx,cy,r*0.11,0,7);ctx.fill();ctx.restore();
+function rose(ctx,cx,cy,r,P,dark){
+  const k=r/104,sp=dark?P.soft:P.ink,ring=dark?P.gold:P.ink,pts=[];
+  ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle=ring;ctx.lineWidth=Math.max(1,3*k);ctx.beginPath();ctx.arc(cx,cy,104*k,0,7);ctx.stroke();ctx.globalAlpha=1;
+  for(let i=0;i<8;i++){const a=-Math.PI/2+i*Math.PI/4,d=(i%2?65.5:84)*k;pts.push([cx+Math.cos(a)*d,cy+Math.sin(a)*d,i]);}
+  ctx.strokeStyle=sp;pts.forEach(p=>{ctx.lineWidth=Math.max(1.2,(p[2]%2?3:5)*k);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p[0],p[1]);ctx.stroke()});
+  pts.forEach(p=>{const i=p[2],rr=Math.max(1.8,(i===0?15:i%2?8:11)*k);ctx.fillStyle=i===0?P.red:i%2?P.grey:P.gold;ctx.beginPath();ctx.arc(p[0],p[1],rr,0,7);ctx.fill();if(!dark){ctx.strokeStyle=P.ink;ctx.lineWidth=Math.max(1,3*k);ctx.stroke()}});
+  ctx.fillStyle=dark?P.gold:P.ink;ctx.beginPath();ctx.arc(cx,cy,22*k,0,7);ctx.fill();ctx.fillStyle=dark?P.ink:P.gold;ctx.beginPath();ctx.arc(cx,cy,8*k,0,7);ctx.fill();
+  ctx.restore();
 }
-function brand(ctx,xRight,y,size,P,color,hole){
-  const font=P.bodyFont(800,size);ctx.font=font;const w=ctx.measureText('Network Atlas').width;
-  T(ctx,'Network Atlas',xRight,y,font,color,'right');compass(ctx,xRight-w-size*0.9,y-size*0.33,size*0.62,color,hole);
+function brand(ctx,xRight,y,size,P,color,dark){
+  const font=P.bodyFont(800,size);ctx.font=font;const w=ctx.measureText('Network Atlas').width,r=size*0.95;
+  T(ctx,'Network Atlas',xRight,y,font,color,'right');rose(ctx,xRight-w-size*0.5-r,y-size*0.33,r,P,dark);
 }
-function footer(ctx,W,y,P,color,f){T(ctx,'From my LinkedIn data export, '+f.endYear,60,y,P.bodyFont(600,18),color,'left');brand(ctx,W-60,y,20,P,color,mixc(P.soft,'#ffffff',.6))}
+function footer(ctx,W,y,P,color,f){T(ctx,'From my LinkedIn data export, '+f.endYear,60,y,P.bodyFont(600,18),color,'left');brand(ctx,W-60,y,20,P,color,false)}
 
 /* ---- Card A: scoreboard ---- */
 function cardA(ctx,W,H,f,P){
@@ -102,7 +106,7 @@ function cardB(ctx,W,H,f,P,opt){
   for(;size>=40;size-=4){ctx.font=P.headFont(900,size);lines=wrapLines(ctx,hl.text,lw-120);if(lines.length*size*1.12<H-360)break}
   lines.forEach((ln,i)=>T(ctx,ln,60,150+size+i*size*1.12,P.headFont(900,size),fg));
   if(hl.sub){ctx.font=P.bodyFont(600,28);wrapLines(ctx,hl.sub,lw-120).slice(0,3).forEach((ln,k)=>T(ctx,ln,60,150+size+lines.length*size*1.12+14+k*36,P.bodyFont(600,28),goldOnInk(P)))}
-  T(ctx,'My LinkedIn, by the numbers',60,H-36,P.bodyFont(600,18),mixc(P.ink,'#ffffff',.6));brand(ctx,lw-48,H-36,22,P,goldOnInk(P),P.ink);
+  T(ctx,'My LinkedIn, by the numbers',60,H-36,P.bodyFont(600,18),mixc(P.ink,'#ffffff',.6));brand(ctx,lw-48,H-36,22,P,goldOnInk(P),true);
   const tl=tiles(f).filter(t=>!hl.uses.includes(t[2])&&!(hl.id!=='grown'&&t[2]==='conn'&&false)).slice(0,3),cs=[P.blue,P.red,P.gold];
   const ph=(H-120-2*16)/3;
   tl.forEach((t,i)=>{const x=lw+36,y=60+i*(ph+16),w=W-lw-72;ctx.fillStyle=cs[i];ctx.fillRect(x,y,w,ph);const fgc=onColor(cs[i],P.ink);
@@ -156,7 +160,7 @@ function cardD(ctx,W,H,f,P){
   tl.forEach((t,i)=>{const y=190+i*(bh+14);ctx.fillStyle=cs[i];ctx.fillRect(70,y,W-140,bh);const fg=onColor(cs[i],P.ink);
     const s=fitText(ctx,t[0],W-140-80,P.headFont.bind(null,900),170,70);T(ctx,t[0],110,y+bh/2+s*0.06,P.headFont(900,s),i===0&&lum(P.gold)>0.2?P.gold:fg);
     ctx.font=P.bodyFont(600,32);wrapLines(ctx,t[1],W-140-80).slice(0,2).forEach((ln,k)=>T(ctx,ln,110,y+bh/2+s*0.06+62+k*38,P.bodyFont(600,32),fg))});
-  T(ctx,'From my LinkedIn data export, '+f.endYear,70,H-52,P.bodyFont(600,24),P.grey);brand(ctx,W-70,H-52,28,P,P.ink,mixc(P.soft,'#ffffff',.6));
+  T(ctx,'From my LinkedIn data export, '+f.endYear,70,H-52,P.bodyFont(600,24),P.grey);brand(ctx,W-70,H-52,28,P,P.ink,false);
 }
 const LAYOUTS=[
  {id:'B',name:'Headline',desc:'One striking finding in big type, with three supporting numbers.',w:1200,h:630,draw:cardB},

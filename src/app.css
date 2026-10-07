@@ -249,3 +249,4 @@ footer.slim{padding:26px 24px 40px}footer.slim p{font-size:12.5px;max-width:860p
 .aboutpage{max-width:860px;margin:0 auto;padding:44px 24px 70px}.aboutpage h1{font-size:clamp(34px,6vw,56px);margin:12px 0 22px}.aboutpage h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin:30px 0 8px;padding-top:18px;border-top:4px solid var(--green)}.aboutpage h2:first-of-type{border-top:0;padding-top:0}.aboutpage p{font-size:14.5px;color:var(--ink);margin:0 0 12px;max-width:760px}
 
 .brand.logo{display:block;line-height:0;text-decoration:none}.brand.logo .logo-svg{height:30px;width:auto;display:block}
+.num.compass .icon-svg{width:62px;height:62px;display:block}
