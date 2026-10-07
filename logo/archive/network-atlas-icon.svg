@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Network Atlas">
+  <rect width="256" height="256" rx="56" fill="#062a30"/>
+  <circle cx="128" cy="128" r="84" fill="none" stroke="#cca300" stroke-width="14"/>
+  <g fill="#cca300">
+    <circle cx="128" cy="30" r="7"/><circle cx="128" cy="226" r="7"/><circle cx="30" cy="128" r="7"/><circle cx="226" cy="128" r="7"/>
+  </g>
+  <!-- needle: red tip points north-east, beige tail south-west -->
+  <path d="M184 72 L148 148 L108 108 Z" fill="#ed4319"/>
+  <path d="M72 184 L108 108 L148 148 Z" fill="#e1d9c1"/>
+  <circle cx="128" cy="128" r="9" fill="#062a30"/>
+</svg>
